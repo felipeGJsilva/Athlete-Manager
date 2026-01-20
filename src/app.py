@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from datetime import datetime
 import os
 
 app = Flask(
     __name__,
-    template_folder="views",      # <-- muda aqui
+    template_folder="views",
     static_folder="static"
 )
 
@@ -15,8 +16,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 CORS(app)
 
-# Modelos
+# ============== MODELOS ==============
+
 class Atleta(db.Model):
+    __tablename__ = 'atletas'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     esporte = db.Column(db.String(50), nullable=False)
@@ -25,258 +28,848 @@ class Atleta(db.Model):
     altura = db.Column(db.Float)
     peso = db.Column(db.Float)
     foto = db.Column(db.Text, default="default")
+    data_nascimento = db.Column(db.DateTime)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    treinos = db.relationship('Treino', backref='atleta', lazy=True, cascade='all, delete-orphan')
+    avaliacoes = db.relationship('Avaliacao', backref='atleta', lazy=True, cascade='all, delete-orphan')
+    evolucoes = db.relationship('Evolucao', backref='atleta', lazy=True, cascade='all, delete-orphan')
+    metas = db.relationship('Meta', backref='atleta', lazy=True, cascade='all, delete-orphan')
+    notificacoes = db.relationship('Notificacao', backref='atleta', lazy=True, cascade='all, delete-orphan')
+    competicoes = db.relationship('Competicao', secondary='atleta_competicao', backref='atletas')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'esporte': self.esporte,
+            'posicao': self.posicao,
+            'idade': self.idade,
+            'altura': self.altura,
+            'peso': self.peso,
+            'foto': self.foto,
+            'data_nascimento': self.data_nascimento.isoformat() if self.data_nascimento else None,
+            'criado_em': self.criado_em.isoformat(),
+            'atualizado_em': self.atualizado_em.isoformat()
+        }
 
 class Treino(db.Model):
+    __tablename__ = 'treinos'
     id = db.Column(db.Integer, primary_key=True)
+    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
     tipo = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text)
+    duracao_minutos = db.Column(db.Integer)
+    data_treino = db.Column(db.DateTime, default=datetime.utcnow)
+    intensidade = db.Column(db.String(20))  # baixa, media, alta
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'atleta_id': self.atleta_id,
+            'tipo': self.tipo,
+            'descricao': self.descricao,
+            'duracao_minutos': self.duracao_minutos,
+            'data_treino': self.data_treino.isoformat(),
+            'intensidade': self.intensidade,
+            'criado_em': self.criado_em.isoformat(),
+            'atualizado_em': self.atualizado_em.isoformat()
+        }
 
 class Avaliacao(db.Model):
+    __tablename__ = 'avaliacoes'
     id = db.Column(db.Integer, primary_key=True)
-    forca = db.Column(db.Float, nullable=False)
-
-class Competicao(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    evento = db.Column(db.String(100), nullable=False)
-
-class Meta(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(100), nullable=False)
+    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
+    forca = db.Column(db.Float)
+    resistencia = db.Column(db.Float)
+    velocidade = db.Column(db.Float)
+    flexibilidade = db.Column(db.Float)
+    imc = db.Column(db.Float)
+    data_avaliacao = db.Column(db.DateTime, default=datetime.utcnow)
+    observacoes = db.Column(db.Text)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'atleta_id': self.atleta_id,
+            'forca': self.forca,
+            'resistencia': self.resistencia,
+            'velocidade': self.velocidade,
+            'flexibilidade': self.flexibilidade,
+            'imc': self.imc,
+            'data_avaliacao': self.data_avaliacao.isoformat(),
+            'observacoes': self.observacoes,
+            'criado_em': self.criado_em.isoformat(),
+            'atualizado_em': self.atualizado_em.isoformat()
+        }
 
 class Evolucao(db.Model):
+    __tablename__ = 'evolucoes'
     id = db.Column(db.Integer, primary_key=True)
+    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
     peso = db.Column(db.Float, nullable=False)
+    altura = db.Column(db.Float)
+    imc = db.Column(db.Float)
+    massa_muscular = db.Column(db.Float)
+    gordura_corporal = db.Column(db.Float)
+    data_medicao = db.Column(db.DateTime, default=datetime.utcnow)
+    observacoes = db.Column(db.Text)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'atleta_id': self.atleta_id,
+            'peso': self.peso,
+            'altura': self.altura,
+            'imc': self.imc,
+            'massa_muscular': self.massa_muscular,
+            'gordura_corporal': self.gordura_corporal,
+            'data_medicao': self.data_medicao.isoformat(),
+            'observacoes': self.observacoes,
+            'criado_em': self.criado_em.isoformat(),
+            'atualizado_em': self.atualizado_em.isoformat()
+        }
+
+class Competicao(db.Model):
+    __tablename__ = 'competicoes'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(150), nullable=False)
+    evento = db.Column(db.String(100), nullable=False)
+    data = db.Column(db.DateTime, nullable=False)
+    local = db.Column(db.String(150))
+    descricao = db.Column(db.Text)
+    resultado = db.Column(db.String(100))
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'evento': self.evento,
+            'data': self.data.isoformat(),
+            'local': self.local,
+            'descricao': self.descricao,
+            'resultado': self.resultado,
+            'criado_em': self.criado_em.isoformat(),
+            'atualizado_em': self.atualizado_em.isoformat()
+        }
+
+class Meta(db.Model):
+    __tablename__ = 'metas'
+    id = db.Column(db.Integer, primary_key=True)
+    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
+    titulo = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text)
+    status = db.Column(db.String(20), default='ativa')  # ativa, concluida, cancelada
+    data_inicio = db.Column(db.DateTime, default=datetime.utcnow)
+    data_conclusao_esperada = db.Column(db.DateTime)
+    data_conclusao_real = db.Column(db.DateTime)
+    progresso = db.Column(db.Integer, default=0)  # 0-100%
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'atleta_id': self.atleta_id,
+            'titulo': self.titulo,
+            'descricao': self.descricao,
+            'status': self.status,
+            'data_inicio': self.data_inicio.isoformat(),
+            'data_conclusao_esperada': self.data_conclusao_esperada.isoformat() if self.data_conclusao_esperada else None,
+            'data_conclusao_real': self.data_conclusao_real.isoformat() if self.data_conclusao_real else None,
+            'progresso': self.progresso,
+            'criado_em': self.criado_em.isoformat(),
+            'atualizado_em': self.atualizado_em.isoformat()
+        }
+
+class Notificacao(db.Model):
+    __tablename__ = 'notificacoes'
+    id = db.Column(db.Integer, primary_key=True)
+    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
+    titulo = db.Column(db.String(100), nullable=False)
+    mensagem = db.Column(db.Text, nullable=False)
+    tipo = db.Column(db.String(50), default='info')  # info, aviso, alerta, sucesso
+    lida = db.Column(db.Boolean, default=False)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_leitura = db.Column(db.DateTime)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'atleta_id': self.atleta_id,
+            'titulo': self.titulo,
+            'mensagem': self.mensagem,
+            'tipo': self.tipo,
+            'lida': self.lida,
+            'data_criacao': self.data_criacao.isoformat(),
+            'data_leitura': self.data_leitura.isoformat() if self.data_leitura else None
+        }
+
+# Tabela de relacionamento many-to-many
+atleta_competicao = db.Table('atleta_competicao',
+    db.Column('atleta_id', db.Integer, db.ForeignKey('atletas.id'), primary_key=True),
+    db.Column('competicao_id', db.Integer, db.ForeignKey('competicoes.id'), primary_key=True)
+)
 
 # Criar banco se não existir
 with app.app_context():
     db.create_all()
 
-# Rotas API para Atletas
+# ============== ENDPOINTS API - ATLETAS ==============
+
 @app.route('/api/atletas', methods=['GET'])
 def get_atletas():
-    atletas = Atleta.query.all()
-    return jsonify([{
-        'id': a.id,
-        'nome': a.nome,
-        'esporte': a.esporte,
-        'posicao': a.posicao,
-        'idade': a.idade,
-        'altura': a.altura,
-        'peso': a.peso,
-        'foto': a.foto
-    } for a in atletas])
+    """Obter lista de todos os atletas"""
+    try:
+        atletas = Atleta.query.all()
+        return jsonify([a.to_dict() for a in atletas]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/atletas/<int:id>', methods=['GET'])
+def get_atleta(id):
+    """Obter atleta específico por ID"""
+    try:
+        atleta = Atleta.query.get_or_404(id)
+        return jsonify(atleta.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
 
 @app.route('/api/atletas', methods=['POST'])
 def add_atleta():
-    data = request.json
-    atleta = Atleta(
-        nome=data['nome'],
-        esporte=data['esporte'],
-        posicao=data.get('posicao'),
-        idade=data.get('idade'),
-        altura=data.get('altura'),
-        peso=data.get('peso'),
-        foto=data.get('foto', 'default')
-    )
-    db.session.add(atleta)
-    db.session.commit()
-    return jsonify({'id': atleta.id}), 201
+    """Criar novo atleta"""
+    try:
+        data = request.json
+        if not data or not data.get('nome') or not data.get('esporte'):
+            return jsonify({'error': 'Nome e esporte são obrigatórios'}), 400
+        
+        atleta = Atleta(
+            nome=data['nome'],
+            esporte=data['esporte'],
+            posicao=data.get('posicao'),
+            idade=data.get('idade'),
+            altura=data.get('altura'),
+            peso=data.get('peso'),
+            foto=data.get('foto', 'default'),
+            data_nascimento=datetime.fromisoformat(data['data_nascimento']) if data.get('data_nascimento') else None
+        )
+        db.session.add(atleta)
+        db.session.commit()
+        return jsonify(atleta.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/atletas/<int:id>', methods=['PUT'])
 def update_atleta(id):
-    atleta = Atleta.query.get_or_404(id)
-    data = request.json
-    atleta.nome = data['nome']
-    atleta.esporte = data['esporte']
-    atleta.posicao = data.get('posicao')
-    atleta.idade = data.get('idade')
-    atleta.altura = data.get('altura')
-    atleta.peso = data.get('peso')
-    atleta.foto = data.get('foto', atleta.foto)
-    db.session.commit()
-    return jsonify({'message': 'Updated'})
+    """Atualizar atleta existente"""
+    try:
+        atleta = Atleta.query.get_or_404(id)
+        data = request.json
+        
+        atleta.nome = data.get('nome', atleta.nome)
+        atleta.esporte = data.get('esporte', atleta.esporte)
+        atleta.posicao = data.get('posicao', atleta.posicao)
+        atleta.idade = data.get('idade', atleta.idade)
+        atleta.altura = data.get('altura', atleta.altura)
+        atleta.peso = data.get('peso', atleta.peso)
+        atleta.foto = data.get('foto', atleta.foto)
+        if data.get('data_nascimento'):
+            atleta.data_nascimento = datetime.fromisoformat(data['data_nascimento'])
+        
+        db.session.commit()
+        return jsonify(atleta.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/atletas/<int:id>', methods=['DELETE'])
 def delete_atleta(id):
-    atleta = Atleta.query.get_or_404(id)
-    db.session.delete(atleta)
-    db.session.commit()
-    return jsonify({'message': 'Deleted'})
+    """Deletar atleta"""
+    try:
+        atleta = Atleta.query.get_or_404(id)
+        db.session.delete(atleta)
+        db.session.commit()
+        return jsonify({'message': 'Atleta deletado com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ============== ENDPOINTS API - TREINOS ==============
 
 @app.route('/api/treinos', methods=['GET'])
 def get_treinos():
-    treinos = Treino.query.all()
-    return jsonify([{'id': t.id, 'tipo': t.tipo} for t in treinos])
+    """Obter lista de todos os treinos"""
+    try:
+        atleta_id = request.args.get('atleta_id')
+        if atleta_id:
+            treinos = Treino.query.filter_by(atleta_id=int(atleta_id)).all()
+        else:
+            treinos = Treino.query.all()
+        return jsonify([t.to_dict() for t in treinos]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/treinos/<int:id>', methods=['GET'])
+def get_treino(id):
+    """Obter treino específico por ID"""
+    try:
+        treino = Treino.query.get_or_404(id)
+        return jsonify(treino.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
 
 @app.route('/api/treinos', methods=['POST'])
 def add_treino():
-    data = request.json
-    treino = Treino(tipo=data['tipo'])
-    db.session.add(treino)
-    db.session.commit()
-    return jsonify({'id': treino.id}), 201
+    """Criar novo treino"""
+    try:
+        data = request.json
+        if not data or not data.get('atleta_id') or not data.get('tipo'):
+            return jsonify({'error': 'atleta_id e tipo são obrigatórios'}), 400
+        
+        atleta = Atleta.query.get_or_404(data['atleta_id'])
+        
+        treino = Treino(
+            atleta_id=data['atleta_id'],
+            tipo=data['tipo'],
+            descricao=data.get('descricao'),
+            duracao_minutos=data.get('duracao_minutos'),
+            intensidade=data.get('intensidade'),
+            data_treino=datetime.fromisoformat(data['data_treino']) if data.get('data_treino') else datetime.utcnow()
+        )
+        db.session.add(treino)
+        db.session.commit()
+        return jsonify(treino.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/treinos/<int:id>', methods=['PUT'])
 def update_treino(id):
-    treino = Treino.query.get_or_404(id)
-    data = request.json
-    treino.tipo = data['tipo']
-    db.session.commit()
-    return jsonify({'message': 'Updated'})
+    """Atualizar treino existente"""
+    try:
+        treino = Treino.query.get_or_404(id)
+        data = request.json
+        
+        treino.tipo = data.get('tipo', treino.tipo)
+        treino.descricao = data.get('descricao', treino.descricao)
+        treino.duracao_minutos = data.get('duracao_minutos', treino.duracao_minutos)
+        treino.intensidade = data.get('intensidade', treino.intensidade)
+        if data.get('data_treino'):
+            treino.data_treino = datetime.fromisoformat(data['data_treino'])
+        
+        db.session.commit()
+        return jsonify(treino.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/treinos/<int:id>', methods=['DELETE'])
 def delete_treino(id):
-    treino = Treino.query.get_or_404(id)
-    db.session.delete(treino)
-    db.session.commit()
-    return jsonify({'message': 'Deleted'})
+    """Deletar treino"""
+    try:
+        treino = Treino.query.get_or_404(id)
+        db.session.delete(treino)
+        db.session.commit()
+        return jsonify({'message': 'Treino deletado com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ============== ENDPOINTS API - AVALIAÇÕES ==============
 
 @app.route('/api/avaliacoes', methods=['GET'])
 def get_avaliacoes():
-    avaliacoes = Avaliacao.query.all()
-    return jsonify([{'id': a.id, 'forca': a.forca} for a in avaliacoes])
+    """Obter lista de todas as avaliações"""
+    try:
+        atleta_id = request.args.get('atleta_id')
+        if atleta_id:
+            avaliacoes = Avaliacao.query.filter_by(atleta_id=int(atleta_id)).all()
+        else:
+            avaliacoes = Avaliacao.query.all()
+        return jsonify([a.to_dict() for a in avaliacoes]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/avaliacoes/<int:id>', methods=['GET'])
+def get_avaliacao(id):
+    """Obter avaliação específica por ID"""
+    try:
+        avaliacao = Avaliacao.query.get_or_404(id)
+        return jsonify(avaliacao.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
 
 @app.route('/api/avaliacoes', methods=['POST'])
 def add_avaliacao():
-    data = request.json
-    avaliacao = Avaliacao(forca=data['forca'])
-    db.session.add(avaliacao)
-    db.session.commit()
-    return jsonify({'id': avaliacao.id}), 201
+    """Criar nova avaliação"""
+    try:
+        data = request.json
+        if not data or not data.get('atleta_id'):
+            return jsonify({'error': 'atleta_id é obrigatório'}), 400
+        
+        atleta = Atleta.query.get_or_404(data['atleta_id'])
+        
+        avaliacao = Avaliacao(
+            atleta_id=data['atleta_id'],
+            forca=data.get('forca'),
+            resistencia=data.get('resistencia'),
+            velocidade=data.get('velocidade'),
+            flexibilidade=data.get('flexibilidade'),
+            imc=data.get('imc'),
+            observacoes=data.get('observacoes'),
+            data_avaliacao=datetime.fromisoformat(data['data_avaliacao']) if data.get('data_avaliacao') else datetime.utcnow()
+        )
+        db.session.add(avaliacao)
+        db.session.commit()
+        return jsonify(avaliacao.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/avaliacoes/<int:id>', methods=['PUT'])
 def update_avaliacao(id):
-    avaliacao = Avaliacao.query.get_or_404(id)
-    data = request.json
-    avaliacao.forca = data['forca']
-    db.session.commit()
-    return jsonify({'message': 'Updated'})
+    """Atualizar avaliação existente"""
+    try:
+        avaliacao = Avaliacao.query.get_or_404(id)
+        data = request.json
+        
+        avaliacao.forca = data.get('forca', avaliacao.forca)
+        avaliacao.resistencia = data.get('resistencia', avaliacao.resistencia)
+        avaliacao.velocidade = data.get('velocidade', avaliacao.velocidade)
+        avaliacao.flexibilidade = data.get('flexibilidade', avaliacao.flexibilidade)
+        avaliacao.imc = data.get('imc', avaliacao.imc)
+        avaliacao.observacoes = data.get('observacoes', avaliacao.observacoes)
+        if data.get('data_avaliacao'):
+            avaliacao.data_avaliacao = datetime.fromisoformat(data['data_avaliacao'])
+        
+        db.session.commit()
+        return jsonify(avaliacao.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/avaliacoes/<int:id>', methods=['DELETE'])
 def delete_avaliacao(id):
-    avaliacao = Avaliacao.query.get_or_404(id)
-    db.session.delete(avaliacao)
-    db.session.commit()
-    return jsonify({'message': 'Deleted'})
+    """Deletar avaliação"""
+    try:
+        avaliacao = Avaliacao.query.get_or_404(id)
+        db.session.delete(avaliacao)
+        db.session.commit()
+        return jsonify({'message': 'Avaliação deletada com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/competicoes', methods=['GET'])
-def get_competicoes():
-    competicoes = Competicao.query.all()
-    return jsonify([{'id': c.id, 'evento': c.evento} for c in competicoes])
-
-@app.route('/api/competicoes', methods=['POST'])
-def add_competicao():
-    data = request.json
-    competicao = Competicao(evento=data['evento'])
-    db.session.add(competicao)
-    db.session.commit()
-    return jsonify({'id': competicao.id}), 201
-
-@app.route('/api/competicoes/<int:id>', methods=['PUT'])
-def update_competicao(id):
-    competicao = Competicao.query.get_or_404(id)
-    data = request.json
-    competicao.evento = data['evento']
-    db.session.commit()
-    return jsonify({'message': 'Updated'})
-
-@app.route('/api/competicoes/<int:id>', methods=['DELETE'])
-def delete_competicao(id):
-    competicao = Competicao.query.get_or_404(id)
-    db.session.delete(competicao)
-    db.session.commit()
-    return jsonify({'message': 'Deleted'})
-
-@app.route('/api/metas', methods=['GET'])
-def get_metas():
-    metas = Meta.query.all()
-    return jsonify([{'id': m.id, 'titulo': m.titulo} for m in metas])
-
-@app.route('/api/metas', methods=['POST'])
-def add_meta():
-    data = request.json
-    meta = Meta(titulo=data['titulo'])
-    db.session.add(meta)
-    db.session.commit()
-    return jsonify({'id': meta.id}), 201
-
-@app.route('/api/metas/<int:id>', methods=['PUT'])
-def update_meta(id):
-    meta = Meta.query.get_or_404(id)
-    data = request.json
-    meta.titulo = data['titulo']
-    db.session.commit()
-    return jsonify({'message': 'Updated'})
-
-@app.route('/api/metas/<int:id>', methods=['DELETE'])
-def delete_meta(id):
-    meta = Meta.query.get_or_404(id)
-    db.session.delete(meta)
-    db.session.commit()
-    return jsonify({'message': 'Deleted'})
+# ============== ENDPOINTS API - EVOLUÇÕES FÍSICAS ==============
 
 @app.route('/api/evolucao', methods=['GET'])
-def get_evolucao():
-    evolucoes = Evolucao.query.all()
-    return jsonify([{'id': e.id, 'peso': e.peso} for e in evolucoes])
+def get_evolucoes():
+    """Obter lista de todas as evoluções"""
+    try:
+        atleta_id = request.args.get('atleta_id')
+        if atleta_id:
+            evolucoes = Evolucao.query.filter_by(atleta_id=int(atleta_id)).all()
+        else:
+            evolucoes = Evolucao.query.all()
+        return jsonify([e.to_dict() for e in evolucoes]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/evolucao/<int:id>', methods=['GET'])
+def get_evolucao(id):
+    """Obter evolução específica por ID"""
+    try:
+        evolucao = Evolucao.query.get_or_404(id)
+        return jsonify(evolucao.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
 
 @app.route('/api/evolucao', methods=['POST'])
 def add_evolucao():
-    data = request.json
-    evolucao = Evolucao(peso=data['peso'])
-    db.session.add(evolucao)
-    db.session.commit()
-    return jsonify({'id': evolucao.id}), 201
+    """Criar nova evolução"""
+    try:
+        data = request.json
+        if not data or not data.get('atleta_id') or not data.get('peso'):
+            return jsonify({'error': 'atleta_id e peso são obrigatórios'}), 400
+        
+        atleta = Atleta.query.get_or_404(data['atleta_id'])
+        
+        evolucao = Evolucao(
+            atleta_id=data['atleta_id'],
+            peso=data['peso'],
+            altura=data.get('altura'),
+            imc=data.get('imc'),
+            massa_muscular=data.get('massa_muscular'),
+            gordura_corporal=data.get('gordura_corporal'),
+            observacoes=data.get('observacoes'),
+            data_medicao=datetime.fromisoformat(data['data_medicao']) if data.get('data_medicao') else datetime.utcnow()
+        )
+        db.session.add(evolucao)
+        db.session.commit()
+        return jsonify(evolucao.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/evolucao/<int:id>', methods=['PUT'])
 def update_evolucao(id):
-    evolucao = Evolucao.query.get_or_404(id)
-    data = request.json
-    evolucao.peso = data['peso']
-    db.session.commit()
-    return jsonify({'message': 'Updated'})
+    """Atualizar evolução existente"""
+    try:
+        evolucao = Evolucao.query.get_or_404(id)
+        data = request.json
+        
+        evolucao.peso = data.get('peso', evolucao.peso)
+        evolucao.altura = data.get('altura', evolucao.altura)
+        evolucao.imc = data.get('imc', evolucao.imc)
+        evolucao.massa_muscular = data.get('massa_muscular', evolucao.massa_muscular)
+        evolucao.gordura_corporal = data.get('gordura_corporal', evolucao.gordura_corporal)
+        evolucao.observacoes = data.get('observacoes', evolucao.observacoes)
+        if data.get('data_medicao'):
+            evolucao.data_medicao = datetime.fromisoformat(data['data_medicao'])
+        
+        db.session.commit()
+        return jsonify(evolucao.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/evolucao/<int:id>', methods=['DELETE'])
 def delete_evolucao(id):
-    evolucao = Evolucao.query.get_or_404(id)
-    db.session.delete(evolucao)
-    db.session.commit()
-    return jsonify({'message': 'Deleted'})
+    """Deletar evolução"""
+    try:
+        evolucao = Evolucao.query.get_or_404(id)
+        db.session.delete(evolucao)
+        db.session.commit()
+        return jsonify({'message': 'Evolução deletada com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-# Rotas de template
+# ============== ENDPOINTS API - COMPETIÇÕES ==============
+
+@app.route('/api/competicoes', methods=['GET'])
+def get_competicoes():
+    """Obter lista de todas as competições"""
+    try:
+        competicoes = Competicao.query.all()
+        return jsonify([c.to_dict() for c in competicoes]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/competicoes/<int:id>', methods=['GET'])
+def get_competicao(id):
+    """Obter competição específica por ID"""
+    try:
+        competicao = Competicao.query.get_or_404(id)
+        return jsonify(competicao.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+@app.route('/api/competicoes', methods=['POST'])
+def add_competicao():
+    """Criar nova competição"""
+    try:
+        data = request.json
+        if not data or not data.get('nome') or not data.get('evento') or not data.get('data'):
+            return jsonify({'error': 'nome, evento e data são obrigatórios'}), 400
+        
+        competicao = Competicao(
+            nome=data['nome'],
+            evento=data['evento'],
+            data=datetime.fromisoformat(data['data']),
+            local=data.get('local'),
+            descricao=data.get('descricao'),
+            resultado=data.get('resultado')
+        )
+        db.session.add(competicao)
+        db.session.commit()
+        return jsonify(competicao.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/competicoes/<int:id>', methods=['PUT'])
+def update_competicao(id):
+    """Atualizar competição existente"""
+    try:
+        competicao = Competicao.query.get_or_404(id)
+        data = request.json
+        
+        competicao.nome = data.get('nome', competicao.nome)
+        competicao.evento = data.get('evento', competicao.evento)
+        competicao.local = data.get('local', competicao.local)
+        competicao.descricao = data.get('descricao', competicao.descricao)
+        competicao.resultado = data.get('resultado', competicao.resultado)
+        if data.get('data'):
+            competicao.data = datetime.fromisoformat(data['data'])
+        
+        db.session.commit()
+        return jsonify(competicao.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/competicoes/<int:id>', methods=['DELETE'])
+def delete_competicao(id):
+    """Deletar competição"""
+    try:
+        competicao = Competicao.query.get_or_404(id)
+        db.session.delete(competicao)
+        db.session.commit()
+        return jsonify({'message': 'Competição deletada com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ============== ENDPOINTS API - METAS ==============
+
+@app.route('/api/metas', methods=['GET'])
+def get_metas():
+    """Obter lista de todas as metas"""
+    try:
+        atleta_id = request.args.get('atleta_id')
+        status = request.args.get('status')
+        
+        query = Meta.query
+        if atleta_id:
+            query = query.filter_by(atleta_id=int(atleta_id))
+        if status:
+            query = query.filter_by(status=status)
+        
+        metas = query.all()
+        return jsonify([m.to_dict() for m in metas]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/metas/<int:id>', methods=['GET'])
+def get_meta(id):
+    """Obter meta específica por ID"""
+    try:
+        meta = Meta.query.get_or_404(id)
+        return jsonify(meta.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+@app.route('/api/metas', methods=['POST'])
+def add_meta():
+    """Criar nova meta"""
+    try:
+        data = request.json
+        if not data or not data.get('atleta_id') or not data.get('titulo'):
+            return jsonify({'error': 'atleta_id e titulo são obrigatórios'}), 400
+        
+        atleta = Atleta.query.get_or_404(data['atleta_id'])
+        
+        meta = Meta(
+            atleta_id=data['atleta_id'],
+            titulo=data['titulo'],
+            descricao=data.get('descricao'),
+            status=data.get('status', 'ativa'),
+            progresso=data.get('progresso', 0),
+            data_conclusao_esperada=datetime.fromisoformat(data['data_conclusao_esperada']) if data.get('data_conclusao_esperada') else None
+        )
+        db.session.add(meta)
+        db.session.commit()
+        return jsonify(meta.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/metas/<int:id>', methods=['PUT'])
+def update_meta(id):
+    """Atualizar meta existente"""
+    try:
+        meta = Meta.query.get_or_404(id)
+        data = request.json
+        
+        meta.titulo = data.get('titulo', meta.titulo)
+        meta.descricao = data.get('descricao', meta.descricao)
+        meta.status = data.get('status', meta.status)
+        meta.progresso = data.get('progresso', meta.progresso)
+        
+        if data.get('data_conclusao_esperada'):
+            meta.data_conclusao_esperada = datetime.fromisoformat(data['data_conclusao_esperada'])
+        
+        if data.get('status') == 'concluida' and not meta.data_conclusao_real:
+            meta.data_conclusao_real = datetime.utcnow()
+        
+        db.session.commit()
+        return jsonify(meta.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/metas/<int:id>', methods=['DELETE'])
+def delete_meta(id):
+    """Deletar meta"""
+    try:
+        meta = Meta.query.get_or_404(id)
+        db.session.delete(meta)
+        db.session.commit()
+        return jsonify({'message': 'Meta deletada com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ============== ENDPOINTS API - NOTIFICAÇÕES ==============
+
+@app.route('/api/notificacoes', methods=['GET'])
+def get_notificacoes():
+    """Obter lista de todas as notificações"""
+    try:
+        atleta_id = request.args.get('atleta_id')
+        lida = request.args.get('lida')
+        
+        query = Notificacao.query
+        if atleta_id:
+            query = query.filter_by(atleta_id=int(atleta_id))
+        if lida is not None:
+            query = query.filter_by(lida=lida.lower() == 'true')
+        
+        notificacoes = query.order_by(Notificacao.data_criacao.desc()).all()
+        return jsonify([n.to_dict() for n in notificacoes]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notificacoes/<int:id>', methods=['GET'])
+def get_notificacao(id):
+    """Obter notificação específica por ID"""
+    try:
+        notificacao = Notificacao.query.get_or_404(id)
+        return jsonify(notificacao.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+@app.route('/api/notificacoes', methods=['POST'])
+def add_notificacao():
+    """Criar nova notificação"""
+    try:
+        data = request.json
+        if not data or not data.get('atleta_id') or not data.get('titulo') or not data.get('mensagem'):
+            return jsonify({'error': 'atleta_id, titulo e mensagem são obrigatórios'}), 400
+        
+        atleta = Atleta.query.get_or_404(data['atleta_id'])
+        
+        notificacao = Notificacao(
+            atleta_id=data['atleta_id'],
+            titulo=data['titulo'],
+            mensagem=data['mensagem'],
+            tipo=data.get('tipo', 'info')
+        )
+        db.session.add(notificacao)
+        db.session.commit()
+        return jsonify(notificacao.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notificacoes/<int:id>', methods=['PUT'])
+def update_notificacao(id):
+    """Atualizar notificação existente (marcar como lida)"""
+    try:
+        notificacao = Notificacao.query.get_or_404(id)
+        data = request.json
+        
+        notificacao.titulo = data.get('titulo', notificacao.titulo)
+        notificacao.mensagem = data.get('mensagem', notificacao.mensagem)
+        notificacao.tipo = data.get('tipo', notificacao.tipo)
+        
+        if data.get('lida') and not notificacao.lida:
+            notificacao.lida = True
+            notificacao.data_leitura = datetime.utcnow()
+        
+        db.session.commit()
+        return jsonify(notificacao.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notificacoes/<int:id>', methods=['DELETE'])
+def delete_notificacao(id):
+    """Deletar notificação"""
+    try:
+        notificacao = Notificacao.query.get_or_404(id)
+        db.session.delete(notificacao)
+        db.session.commit()
+        return jsonify({'message': 'Notificação deletada com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notificacoes/atleta/<int:atleta_id>/nao-lidas', methods=['GET'])
+def get_notificacoes_nao_lidas(atleta_id):
+    """Obter quantidade de notificações não lidas de um atleta"""
+    try:
+        Atleta.query.get_or_404(atleta_id)
+        count = Notificacao.query.filter_by(atleta_id=atleta_id, lida=False).count()
+        return jsonify({'atleta_id': atleta_id, 'nao_lidas': count}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+# ============== ENDPOINTS API - RELATÓRIOS ==============
+
+@app.route('/api/atletas/<int:atleta_id>/resumo', methods=['GET'])
+def get_resumo_atleta(atleta_id):
+    """Obter resumo completo de um atleta"""
+    try:
+        atleta = Atleta.query.get_or_404(atleta_id)
+        
+        return jsonify({
+            'atleta': atleta.to_dict(),
+            'treinos': [t.to_dict() for t in atleta.treinos],
+            'avaliacoes': [a.to_dict() for a in atleta.avaliacoes],
+            'evolucoes': [e.to_dict() for e in atleta.evolucoes],
+            'metas': [m.to_dict() for m in atleta.metas],
+            'notificacoes': [n.to_dict() for n in atleta.notificacoes],
+            'competicoes': [c.to_dict() for c in atleta.competicoes]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+# ============== ROTAS DE TEMPLATES ==============
+
 @app.route("/")
 def home():
-    return render_template("base/base.html")  # funciona normalmente
+    return render_template("base/base.html")
 
 @app.route("/competicoes")
 def competicoes():
-    return render_template("base/competicoes.html")  # funciona normalmente
+    return render_template("base/competicoes.html")
 
 @app.route("/atletas")
 def atletas():
-    return render_template("base/atletas.html")  # funciona normalmente
-
+    return render_template("base/atletas.html")
 
 @app.route("/avaliacoes")
 def avaliacoes():
-    return render_template("base/avaliacoes.html")  # funciona normalmente
-
+    return render_template("base/avaliacoes.html")
 
 @app.route("/metas")
 def metas():
-    return render_template("base/metas.html")  # funciona normalmente
-
+    return render_template("base/metas.html")
 
 @app.route("/treinos")
 def treinos():
-    return render_template("base/treinos.html")  # funciona normalmente]
+    return render_template("base/treinos.html")
 
 @app.route("/sobre")
 def sobre():
-    return render_template("base/sobre.html")  # funciona normalmente
+    return render_template("base/sobre.html")
 
 @app.route("/evolucao")
 def evolucao():
-    return render_template("base/evolucao.html")  # funciona normalmente
+    return render_template("base/evolucao.html")
 
 if __name__ == "__main__": 
     app.run(debug=True)
