@@ -1,0 +1,31 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo circular -->
+  <circle cx="100" cy="100" r="95" fill="#D98F07" opacity="0.1" stroke="#D98F07" stroke-width="2"/>
+  
+  <!-- Silhueta de atleta em posição de corrida -->
+  <g transform="translate(100, 100)">
+    <!-- Cabeça -->
+    <circle cx="-15" cy="-35" r="12" fill="#D98F07"/>
+    
+    <!-- Corpo -->
+    <ellipse cx="-15" cy="-15" rx="10" ry="18" fill="#D98F07"/>
+    
+    <!-- Braço esquerdo (levantado) -->
+    <line x1="-25" y1="-15" x2="-40" y2="-30" stroke="#D98F07" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Braço direito (para trás) -->
+    <line x1="-5" y1="-15" x2="15" y2="-5" stroke="#D98F07" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Perna esquerda (para frente) -->
+    <line x1="-15" y1="3" x2="-20" y2="35" stroke="#D98F07" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Perna direita (para trás) -->
+    <line x1="-15" y1="3" x2="-5" y2="25" stroke="#D98F07" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+    
+    <!-- Cinto de medida (elemento decorativo) -->
+    <rect x="-25" y="-5" width="20" height="20" fill="none" stroke="#D98F07" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>
+  </g>
+  
+  <!-- Texto -->
+  <text x="100" y="175" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#D98F07" text-anchor="middle">ATHLETE</text>
+</svg>

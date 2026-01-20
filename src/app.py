@@ -847,6 +847,10 @@ def home():
 def competicoes():
     return render_template("base/competicoes.html")
 
+@app.route("/")
+def dashboard():
+    return render_template("base/base.html")
+
 @app.route("/atletas")
 def atletas():
     return render_template("base/atletas.html")
@@ -870,6 +874,10 @@ def sobre():
 @app.route("/evolucao")
 def evolucao():
     return render_template("base/evolucao.html")
+
+@app.route("/competicoes")
+def competicoes():
+    return render_template("base/competicoes.html")
 
 if __name__ == "__main__": 
     app.run(debug=True)
