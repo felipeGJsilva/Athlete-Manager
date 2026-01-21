@@ -37,6 +37,9 @@
                 {% if current_user.role in ['treinador', 'admin'] %}
                 <li class="nav-item"><a class="nav-link" href="/atletas">Atletas</a></li>
                 {% endif %}
+                {% if current_user.role == 'atleta' %}
+                <li class="nav-item"><a class="nav-link" href="/perfil">Meu Perfil</a></li>
+                {% endif %}
                 <li class="nav-item"><a class="nav-link" href="/treinos">Treinos</a></li>
                 <li class="nav-item"><a class="nav-link" href="/evolucao">Evolução</a></li>
                 {% if current_user.role in ['treinador', 'admin'] %}

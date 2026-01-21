@@ -439,7 +439,13 @@ def get_treinos():
                 atletas_ids = [a.id for a in Atleta.query.filter_by(treinador_id=current_user.id).all()]
                 treinos = Treino.query.filter(Treino.atleta_id.in_(atletas_ids)).all()
             else:  # atleta
-                treinos = Treino.query.filter_by(atleta_id=current_user.id).all()
+                # Atletas veem treinos criados para eles pelos treinadores
+                # Primeiro, encontrar o registro Atleta correspondente ao usuário
+                atleta_record = Atleta.query.filter_by(email=current_user.email).first()
+                if atleta_record:
+                    treinos = Treino.query.filter_by(atleta_id=atleta_record.id).all()
+                else:
+                    treinos = []
         return jsonify([t.to_dict() for t in treinos]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1057,33 +1063,43 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('home'))
+    # Removido o redirecionamento para permitir registro mesmo quando logado
+    # if current_user.is_authenticated:
+    #     return redirect(url_for('home'))
     
+    print(f"Método: {request.method}")  # Debug
     if request.method == 'POST':
+        print("Dados do POST recebidos")  # Debug
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         role = request.form.get('role', 'atleta')
         
+        print(f"Dados: username={username}, email={email}, role={role}")  # Debug
+        
         if not all([username, email, password, confirm_password]):
+            print("Campos obrigatórios faltando")  # Debug
             flash('Por favor, preencha todos os campos.', 'warning')
             return redirect(url_for('register'))
         
         if password != confirm_password:
+            print("Senhas não coincidem")  # Debug
             flash('As senhas não coincidem.', 'danger')
             return redirect(url_for('register'))
         
         if len(password) < 6:
+            print("Senha muito curta")  # Debug
             flash('A senha deve ter pelo menos 6 caracteres.', 'warning')
             return redirect(url_for('register'))
         
         if User.query.filter_by(username=username).first():
+            print("Username já existe")  # Debug
             flash('Nome de usuário já existe.', 'danger')
             return redirect(url_for('register'))
         
         if User.query.filter_by(email=email).first():
+            print("Email já existe")  # Debug
             flash('Email já cadastrado.', 'danger')
             return redirect(url_for('register'))
         
@@ -1097,12 +1113,15 @@ def register():
         try:
             db.session.add(user)
             db.session.commit()
+            print(f"Usuário {username} criado com sucesso!")  # Debug
             flash('Conta criada com sucesso! Faça login.', 'success')
             return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()
+            print(f"Erro ao criar usuário: {e}")  # Debug
             flash('Erro ao criar conta. Tente novamente.', 'danger')
     
+    print("Renderizando template register.html")  # Debug
     return render_template('auth/register.html')
 
 @app.route('/logout')
@@ -1170,6 +1189,21 @@ def evolucao():
         # Atletas veem apenas sua própria evolução
         return render_template("base/evolucao.html", atleta_only=True)
     return render_template("base/evolucao.html")
+
+@app.route("/perfil")
+@login_required
+def perfil():
+    if current_user.role == 'atleta':
+        # Atletas veem seu próprio perfil
+        atleta = Atleta.query.filter_by(email=current_user.email).first()
+        if atleta:
+            return render_template("base/perfil.html", atleta=atleta)
+        else:
+            flash("Perfil de atleta não encontrado.", "warning")
+            return redirect(url_for('home'))
+    else:
+        # Treinadores e admins são redirecionados para atletas
+        return redirect(url_for('atletas'))
 
 @app.route("/admin")
 @login_required
