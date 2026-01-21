@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 
@@ -13,8 +15,16 @@ app = Flask(
 # Configuração do banco de dados
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///athlete_manager.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 db = SQLAlchemy(app)
 CORS(app)
+
+# Configuração do Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+login_manager.login_message_category = 'info'
 
 # ============== MODELOS ==============
 
@@ -28,11 +38,14 @@ class Atleta(db.Model):
     altura = db.Column(db.Float)
     peso = db.Column(db.Float)
     foto = db.Column(db.Text, default="default")
+    email = db.Column(db.String(150), unique=True)  # Adicionado para vinculação
+    treinador_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Vinculação ao treinador
     data_nascimento = db.Column(db.DateTime)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relacionamentos
+    treinador = db.relationship('User', backref='atletas', lazy=True)
     treinos = db.relationship('Treino', backref='atleta', lazy=True, cascade='all, delete-orphan')
     avaliacoes = db.relationship('Avaliacao', backref='atleta', lazy=True, cascade='all, delete-orphan')
     evolucoes = db.relationship('Evolucao', backref='atleta', lazy=True, cascade='all, delete-orphan')
@@ -50,6 +63,8 @@ class Atleta(db.Model):
             'altura': self.altura,
             'peso': self.peso,
             'foto': self.foto,
+            'email': self.email,
+            'treinador_id': self.treinador_id,
             'data_nascimento': self.data_nascimento.isoformat() if self.data_nascimento else None,
             'criado_em': self.criado_em.isoformat(),
             'atualizado_em': self.atualizado_em.isoformat()
@@ -215,6 +230,63 @@ class Notificacao(db.Model):
             'data_leitura': self.data_leitura.isoformat() if self.data_leitura else None
         }
 
+# ============== MODELO USER ==============
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(db.String(50), nullable=False, default='atleta')  # admin, treinador, atleta
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'role': self.role,
+            'created_at': self.created_at.isoformat(),
+            'is_active': self.is_active
+        }
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# ============== DECORATORS DE AUTORIZAÇÃO ==============
+
+from functools import wraps
+
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if current_user.role != role and current_user.role != 'admin':
+                flash('Acesso negado. Você não tem permissão para acessar esta página.', 'danger')
+                return redirect(url_for('home'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def admin_required(f):
+    return role_required('admin')(f)
+
+def treinador_required(f):
+    return role_required('treinador')(f)
+
+def atleta_required(f):
+    return role_required('atleta')(f)
+
 # Tabela de relacionamento many-to-many
 atleta_competicao = db.Table('atleta_competicao',
     db.Column('atleta_id', db.Integer, db.ForeignKey('atletas.id'), primary_key=True),
@@ -228,15 +300,22 @@ with app.app_context():
 # ============== ENDPOINTS API - ATLETAS ==============
 
 @app.route('/api/atletas', methods=['GET'])
+@login_required
+@treinador_required
 def get_atletas():
-    """Obter lista de todos os atletas"""
+    """Obter lista de atletas do treinador logado"""
     try:
-        atletas = Atleta.query.all()
+        if current_user.role == 'admin':
+            atletas = Atleta.query.all()
+        else:
+            atletas = Atleta.query.filter_by(treinador_id=current_user.id).all()
         return jsonify([a.to_dict() for a in atletas]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/atletas/<int:id>', methods=['GET'])
+@login_required
+@treinador_required
 def get_atleta(id):
     """Obter atleta específico por ID"""
     try:
@@ -246,6 +325,8 @@ def get_atleta(id):
         return jsonify({'error': str(e)}), 404
 
 @app.route('/api/atletas', methods=['POST'])
+@login_required
+@treinador_required
 def add_atleta():
     """Criar novo atleta"""
     try:
@@ -261,6 +342,8 @@ def add_atleta():
             altura=data.get('altura'),
             peso=data.get('peso'),
             foto=data.get('foto', 'default'),
+            email=data.get('email'),
+            treinador_id=current_user.id,  # Vincula ao treinador logado
             data_nascimento=datetime.fromisoformat(data['data_nascimento']) if data.get('data_nascimento') else None
         )
         db.session.add(atleta)
@@ -271,6 +354,8 @@ def add_atleta():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/atletas/<int:id>', methods=['PUT'])
+@login_required
+@treinador_required
 def update_atleta(id):
     """Atualizar atleta existente"""
     try:
@@ -293,7 +378,34 @@ def update_atleta(id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/atletas/vincular', methods=['POST'])
+@login_required
+@treinador_required
+def vincular_atleta():
+    """Vincular atleta existente ao treinador via email"""
+    try:
+        data = request.json
+        email = data.get('email')
+        if not email:
+            return jsonify({'error': 'Email é obrigatório'}), 400
+        
+        atleta = Atleta.query.filter_by(email=email).first()
+        if not atleta:
+            return jsonify({'error': 'Atleta não encontrado com este email'}), 404
+        
+        if atleta.treinador_id and atleta.treinador_id != current_user.id:
+            return jsonify({'error': 'Atleta já vinculado a outro treinador'}), 400
+        
+        atleta.treinador_id = current_user.id
+        db.session.commit()
+        return jsonify({'message': 'Atleta vinculado com sucesso', 'atleta': atleta.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/atletas/<int:id>', methods=['DELETE'])
+@login_required
+@treinador_required
 def delete_atleta(id):
     """Deletar atleta"""
     try:
@@ -308,14 +420,26 @@ def delete_atleta(id):
 # ============== ENDPOINTS API - TREINOS ==============
 
 @app.route('/api/treinos', methods=['GET'])
+@login_required
 def get_treinos():
-    """Obter lista de todos os treinos"""
+    """Obter lista de treinos"""
     try:
         atleta_id = request.args.get('atleta_id')
         if atleta_id:
+            # Verificar se o atleta pertence ao treinador (ou é admin)
+            atleta = Atleta.query.get(int(atleta_id))
+            if not atleta or (current_user.role != 'admin' and atleta.treinador_id != current_user.id):
+                return jsonify({'error': 'Acesso negado'}), 403
             treinos = Treino.query.filter_by(atleta_id=int(atleta_id)).all()
         else:
-            treinos = Treino.query.all()
+            # Se não especificou atleta, mostrar treinos de todos os atletas do treinador
+            if current_user.role == 'admin':
+                treinos = Treino.query.all()
+            elif current_user.role == 'treinador':
+                atletas_ids = [a.id for a in Atleta.query.filter_by(treinador_id=current_user.id).all()]
+                treinos = Treino.query.filter(Treino.atleta_id.in_(atletas_ids)).all()
+            else:  # atleta
+                treinos = Treino.query.filter_by(atleta_id=current_user.id).all()
         return jsonify([t.to_dict() for t in treinos]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -330,6 +454,7 @@ def get_treino(id):
         return jsonify({'error': str(e)}), 404
 
 @app.route('/api/treinos', methods=['POST'])
+@login_required
 def add_treino():
     """Criar novo treino"""
     try:
@@ -338,6 +463,10 @@ def add_treino():
             return jsonify({'error': 'atleta_id e tipo são obrigatórios'}), 400
         
         atleta = Atleta.query.get_or_404(data['atleta_id'])
+        
+        # Verificar permissões
+        if current_user.role != 'admin' and atleta.treinador_id != current_user.id:
+            return jsonify({'error': 'Acesso negado - atleta não pertence ao treinador'}), 403
         
         treino = Treino(
             atleta_id=data['atleta_id'],
@@ -837,43 +966,217 @@ def get_resumo_atleta(atleta_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 404
 
+# ============== ENDPOINTS API - USUÁRIOS (ADMIN) ==============
+
+@app.route('/api/users', methods=['GET'])
+@login_required
+@admin_required
+def get_users():
+    """Obter lista de usuários"""
+    try:
+        users = User.query.all()
+        return jsonify([u.to_dict() for u in users]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users/<int:id>', methods=['GET'])
+@login_required
+@admin_required
+def get_user(id):
+    """Obter usuário por ID"""
+    try:
+        user = User.query.get_or_404(id)
+        return jsonify(user.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+@app.route('/api/users/<int:id>', methods=['PUT'])
+@login_required
+@admin_required
+def update_user(id):
+    """Atualizar usuário"""
+    try:
+        user = User.query.get_or_404(id)
+        data = request.get_json()
+        
+        if 'username' in data:
+            user.username = data['username']
+        if 'email' in data:
+            user.email = data['email']
+        if 'role' in data:
+            user.role = data['role']
+        
+        db.session.commit()
+        return jsonify({'message': 'Usuário atualizado com sucesso', 'user': user.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users/<int:id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_user(id):
+    """Deletar usuário"""
+    try:
+        user = User.query.get_or_404(id)
+        if user.id == current_user.id:
+            return jsonify({'error': 'Não é possível excluir o próprio usuário'}), 400
+        
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'Usuário deletado com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ============== ROTAS DE AUTENTICAÇÃO ==============
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            flash('Por favor, preencha todos os campos.', 'warning')
+            return redirect(url_for('login'))
+        
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password) and user.is_active:
+            login_user(user)
+            next_page = request.args.get('next')
+            flash(f'Bem-vindo, {user.username}!', 'success')
+            return redirect(next_page) if next_page else redirect(url_for('home'))
+        else:
+            flash('Credenciais inválidas ou conta desativada.', 'danger')
+    
+    return render_template('auth/login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        role = request.form.get('role', 'atleta')
+        
+        if not all([username, email, password, confirm_password]):
+            flash('Por favor, preencha todos os campos.', 'warning')
+            return redirect(url_for('register'))
+        
+        if password != confirm_password:
+            flash('As senhas não coincidem.', 'danger')
+            return redirect(url_for('register'))
+        
+        if len(password) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres.', 'warning')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(username=username).first():
+            flash('Nome de usuário já existe.', 'danger')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email já cadastrado.', 'danger')
+            return redirect(url_for('register'))
+        
+        # Validar role
+        if role not in ['admin', 'treinador', 'atleta']:
+            role = 'atleta'
+        
+        user = User(username=username, email=email, role=role)
+        user.set_password(password)
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash('Conta criada com sucesso! Faça login.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('Erro ao criar conta. Tente novamente.', 'danger')
+    
+    return render_template('auth/register.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Você foi desconectado.', 'info')
+    return redirect(url_for('login'))
+
 # ============== ROTAS DE TEMPLATES ==============
 
 @app.route("/")
+@login_required
 def home():
     return render_template("base/base.html")
 
 @app.route("/competicoes")
+@login_required
+@treinador_required
 def competicoes():
     return render_template("base/competicoes.html")
 
-@app.route("/")
+@app.route("/dashboard")
+@login_required
 def dashboard():
     return render_template("base/base.html")
 
 @app.route("/atletas")
+@login_required
+@treinador_required
 def atletas():
     return render_template("base/atletas.html")
 
 @app.route("/avaliacoes")
+@login_required
+@treinador_required
 def avaliacoes():
     return render_template("base/avaliacoes.html")
 
 @app.route("/metas")
+@login_required
 def metas():
+    if current_user.role == 'atleta':
+        # Atletas veem apenas suas próprias metas
+        return render_template("base/metas.html", atleta_only=True)
     return render_template("base/metas.html")
 
 @app.route("/treinos")
+@login_required
 def treinos():
+    if current_user.role == 'atleta':
+        # Atletas veem apenas seus próprios treinos
+        return render_template("base/treinos.html", atleta_only=True)
     return render_template("base/treinos.html")
 
 @app.route("/sobre")
+@login_required
 def sobre():
     return render_template("base/sobre.html")
 
 @app.route("/evolucao")
+@login_required
 def evolucao():
+    if current_user.role == 'atleta':
+        # Atletas veem apenas sua própria evolução
+        return render_template("base/evolucao.html", atleta_only=True)
     return render_template("base/evolucao.html")
+
+@app.route("/admin")
+@login_required
+@admin_required
+def admin():
+    users = User.query.all()
+    return render_template("base/admin.html", users=users)
 
 if __name__ == "__main__": 
     app.run(debug=True)

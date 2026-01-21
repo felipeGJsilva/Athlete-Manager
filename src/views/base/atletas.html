@@ -49,9 +49,14 @@
             <p>Gerencie atletas cadastrados, informações físicas e evolução.</p>
         </div>
 
-        <button class="btn btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddAtleta">
-            + Novo Atleta
-        </button>
+        <div>
+            <button class="btn btn-warning fw-bold me-2" data-bs-toggle="modal" data-bs-target="#modalAddAtleta">
+                + Novo Atleta
+            </button>
+            <button class="btn btn-outline-warning fw-bold" data-bs-toggle="modal" data-bs-target="#modalVincularAtleta">
+                Vincular Atleta
+            </button>
+        </div>
     </section>
 
     <!-- CARDS -->
@@ -76,6 +81,9 @@
 
                 <label class="mt-2">Nome</label>
                 <input class="form-control" name="nome" required>
+
+                <label class="mt-2">Email</label>
+                <input class="form-control" name="email" type="email" required>
 
                 <label class="mt-2">Esporte</label>
                 <input class="form-control" name="esporte" required>
@@ -108,6 +116,28 @@
 </div>
 
 <!-- ==============================
+        MODAL VINCULAR ATLETA
+================================== -->
+<div class="modal fade" id="modalVincularAtleta" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content p-3">
+
+            <h4 class="mb-3">Vincular Atleta</h4>
+            <p class="text-muted">Digite o email do atleta para vinculá-lo à sua conta.</p>
+
+            <form id="formVincularAtleta">
+
+                <label class="mt-2">Email do Atleta</label>
+                <input class="form-control" name="email" type="email" required placeholder="exemplo@email.com">
+
+                <button class="btn btn-success mt-3 w-100">Vincular</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==============================
         MODAL EDITAR ATLETA
 ================================== -->
 <div class="modal fade" id="modalEditAtleta" tabindex="-1">
@@ -122,6 +152,9 @@
 
                 <label class="mt-2">Nome</label>
                 <input class="form-control" name="nome" required>
+
+                <label class="mt-2">Email</label>
+                <input class="form-control" name="email" type="email" required>
 
                 <label class="mt-2">Esporte</label>
                 <input class="form-control" name="esporte" required>

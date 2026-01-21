@@ -17,6 +17,7 @@ document.getElementById("formAddAtleta").onsubmit = async e => {
 
     const atleta = {
         nome: form.nome.value,
+        email: form.email.value,
         esporte: form.esporte.value,
         posicao: form.posicao.value,
         idade: parseInt(form.idade.value),
@@ -42,6 +43,41 @@ document.getElementById("formAddAtleta").onsubmit = async e => {
 };
 
 // ======================
+// FUNÇÃO VINCULAR ATLETA
+// ======================
+document.getElementById("formVincularAtleta").onsubmit = async e => {
+    e.preventDefault();
+
+    const form = e.target;
+
+    const data = {
+        email: form.email.value
+    };
+
+    try {
+        const response = await fetch('/api/atletas/vincular', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message);
+            form.reset();
+            carregarAtletas();
+            bootstrap.Modal.getInstance(document.getElementById("modalVincularAtleta")).hide();
+        } else {
+            alert(result.error || 'Erro ao vincular atleta');
+        }
+    } catch (error) {
+        console.error('Erro ao vincular atleta:', error);
+        alert('Erro de rede ao vincular atleta');
+    }
+};
+
+// ======================
 // FUNÇÃO EDITAR
 // ======================
 document.getElementById("formEditAtleta").onsubmit = async e => {
@@ -53,6 +89,7 @@ document.getElementById("formEditAtleta").onsubmit = async e => {
 
     const atleta = {
         nome: form.nome.value,
+        email: form.email.value,
         esporte: form.esporte.value,
         posicao: form.posicao.value,
         idade: parseInt(form.idade.value),
@@ -130,6 +167,7 @@ async function editarAtleta(id) {
 
         form.id.value = a.id;
         form.nome.value = a.nome;
+        form.email.value = a.email;
         form.esporte.value = a.esporte;
         form.posicao.value = a.posicao;
         form.idade.value = a.idade;
