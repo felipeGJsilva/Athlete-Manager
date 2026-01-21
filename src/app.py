@@ -875,9 +875,5 @@ def sobre():
 def evolucao():
     return render_template("base/evolucao.html")
 
-@app.route("/competicoes")
-def competicoes():
-    return render_template("base/competicoes.html")
-
 if __name__ == "__main__": 
     app.run(debug=True)
