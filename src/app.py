@@ -327,6 +327,53 @@ def get_atleta(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 404
 
+@app.route('/api/atletas/me', methods=['GET'])
+@login_required
+def get_atleta_me():
+    """Obter dados do atleta logado"""
+    try:
+        if current_user.role != 'atleta':
+            return jsonify({'error': 'Acesso negado - apenas atletas'}), 403
+        
+        atleta = Atleta.query.filter_by(email=current_user.email).first()
+        if not atleta:
+            return jsonify({'error': 'Atleta não encontrado'}), 404
+        
+        return jsonify(atleta.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/atletas/me/resumo', methods=['GET'])
+@login_required
+def get_resumo_atleta_me():
+    """Obter resumo do atleta logado"""
+    try:
+        if current_user.role != 'atleta':
+            return jsonify({'error': 'Acesso negado - apenas atletas'}), 403
+        
+        atleta = Atleta.query.filter_by(email=current_user.email).first()
+        if not atleta:
+            return jsonify({'error': 'Atleta não encontrado'}), 404
+        
+        # Próximo treino
+        proximo_treino = Treino.query.filter_by(atleta_id=atleta.id)\
+            .filter(Treino.data_treino >= datetime.utcnow())\
+            .order_by(Treino.data_treino.asc()).first()
+        
+        # Última evolução
+        ultima_evolucao = Evolucao.query.filter_by(atleta_id=atleta.id)\
+            .order_by(Evolucao.data_medicao.desc()).first()
+        
+        return jsonify({
+            'atleta': atleta.to_dict(),
+            'total_treinos': len(atleta.treinos),
+            'peso_atual': ultima_evolucao.peso if ultima_evolucao else atleta.peso,
+            'imc_atual': ultima_evolucao.imc if ultima_evolucao else None,
+            'proximo_treino': proximo_treino.to_dict() if proximo_treino else None
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/atletas', methods=['POST'])
 @login_required
 @treinador_required
@@ -428,27 +475,34 @@ def get_treinos():
     """Obter lista de treinos"""
     try:
         atleta_id = request.args.get('atleta_id')
+        limit = request.args.get('limit', type=int)
+        
+        query = Treino.query
+        
         if atleta_id:
             # Verificar se o atleta pertence ao treinador (ou é admin)
             atleta = Atleta.query.get(int(atleta_id))
             if not atleta or (current_user.role != 'admin' and atleta.treinador_id != current_user.id):
                 return jsonify({'error': 'Acesso negado'}), 403
-            treinos = Treino.query.filter_by(atleta_id=int(atleta_id)).all()
+            query = query.filter_by(atleta_id=int(atleta_id))
         else:
             # Se não especificou atleta, mostrar treinos de todos os atletas do treinador
             if current_user.role == 'admin':
-                treinos = Treino.query.all()
+                pass  # query já é Treino.query
             elif current_user.role == 'treinador':
                 atletas_ids = [a.id for a in Atleta.query.filter_by(treinador_id=current_user.id).all()]
-                treinos = Treino.query.filter(Treino.atleta_id.in_(atletas_ids)).all()
+                query = query.filter(Treino.atleta_id.in_(atletas_ids))
             else:  # atleta
                 # Atletas veem treinos criados para eles pelos treinadores
-                # Primeiro, encontrar o registro Atleta correspondente ao usuário
                 atleta_record = Atleta.query.filter_by(email=current_user.email).first()
                 if atleta_record:
-                    treinos = Treino.query.filter_by(atleta_id=atleta_record.id).all()
+                    query = query.filter_by(atleta_id=atleta_record.id)
                 else:
-                    treinos = []
+                    return jsonify([]), 200
+        
+        # Ordenar por data decrescente e aplicar limit
+        treinos = query.order_by(Treino.data_treino.desc()).limit(limit).all() if limit else query.order_by(Treino.data_treino.desc()).all()
+        
         return jsonify([t.to_dict() for t in treinos]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -612,14 +666,38 @@ def delete_avaliacao(id):
 # ============== ENDPOINTS API - EVOLUÇÕES FÍSICAS ==============
 
 @app.route('/api/evolucao', methods=['GET'])
+@login_required
 def get_evolucoes():
-    """Obter lista de todas as evoluções"""
+    """Obter lista de evoluções"""
     try:
         atleta_id = request.args.get('atleta_id')
+        limit = request.args.get('limit', type=int)
+        
+        query = Evolucao.query
+        
         if atleta_id:
-            evolucoes = Evolucao.query.filter_by(atleta_id=int(atleta_id)).all()
+            # Verificar permissões
+            atleta = Atleta.query.get(int(atleta_id))
+            if not atleta or (current_user.role != 'admin' and atleta.treinador_id != current_user.id and current_user.email != atleta.email):
+                return jsonify({'error': 'Acesso negado'}), 403
+            query = query.filter_by(atleta_id=int(atleta_id))
         else:
-            evolucoes = Evolucao.query.all()
+            # Se não especificou atleta
+            if current_user.role == 'admin':
+                pass
+            elif current_user.role == 'treinador':
+                atletas_ids = [a.id for a in Atleta.query.filter_by(treinador_id=current_user.id).all()]
+                query = query.filter(Evolucao.atleta_id.in_(atletas_ids))
+            else:  # atleta
+                atleta_record = Atleta.query.filter_by(email=current_user.email).first()
+                if atleta_record:
+                    query = query.filter_by(atleta_id=atleta_record.id)
+                else:
+                    return jsonify([]), 200
+        
+        # Ordenar por data decrescente e aplicar limit
+        evolucoes = query.order_by(Evolucao.data_medicao.desc()).limit(limit).all() if limit else query.order_by(Evolucao.data_medicao.desc()).all()
+        
         return jsonify([e.to_dict() for e in evolucoes]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1154,9 +1232,11 @@ def dashboard():
 
 @app.route("/atletas")
 @login_required
-@treinador_required
 def atletas():
-    return render_template("base/atletas.html")
+    if current_user.role == 'atleta':
+        return render_template("base/atleta_perfil.html")
+    else:
+        return render_template("base/atletas.html")
 
 @app.route("/avaliacoes")
 @login_required
