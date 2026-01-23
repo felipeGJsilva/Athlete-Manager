@@ -54,100 +54,57 @@
     <section class="card p-4 shadow-sm mb-5">
         <h4 class="mb-4">Cadastro de Avaliação</h4>
 
-        <form>
+        <form id="formAvaliacao">
             <!-- DADOS GERAIS -->
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="form-label">Atleta</label>
-                    <select class="form-select">
-                        <option selected>Selecione o atleta</option>
-                        <option>João Silva</option>
-                        <option>Pedro Almeida</option>
-                        <option>Lucas Pereira</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Modalidade</label>
-                    <select class="form-select">
-                        <option selected>Selecione</option>
-                        <option>Rugby</option>
-                        <option>Futebol</option>
-                        <option>Atletismo</option>
+                    <select class="form-select" name="atleta_id" required>
+                        <option value="">Selecione o atleta</option>
                     </select>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label">Data da Avaliação</label>
-                    <input type="date" class="form-control">
+                    <input type="datetime-local" class="form-control" name="data_avaliacao">
                 </div>
             </div>
 
-            <!-- AVALIAÇÃO ANTROPOMÉTRICA -->
-            <h5 class="mb-3">Avaliação Antropométrica</h5>
+            <!-- AVALIAÇÃO FÍSICA -->
+            <h5 class="mb-3">Avaliação Física</h5>
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
-                    <label class="form-label">Peso (kg)</label>
-                    <input type="number" class="form-control" placeholder="Ex: 92">
+                    <label class="form-label">Força</label>
+                    <input type="number" step="0.01" class="form-control" name="forca" placeholder="Ex: 85.5">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Altura (m)</label>
-                    <input type="number" step="0.01" class="form-control" placeholder="Ex: 1.85">
+                    <label class="form-label">Resistência</label>
+                    <input type="number" step="0.01" class="form-control" name="resistencia" placeholder="Ex: 90.0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Velocidade</label>
+                    <input type="number" step="0.01" class="form-control" name="velocidade" placeholder="Ex: 10.2">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Flexibilidade</label>
+                    <input type="number" step="0.01" class="form-control" name="flexibilidade" placeholder="Ex: 45.0">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">IMC</label>
-                    <input type="text" class="form-control" placeholder="Calculado" disabled>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">% Gordura</label>
-                    <input type="number" class="form-control" placeholder="Ex: 14">
-                </div>
-            </div>
-
-            <!-- FORÇA E POTÊNCIA -->
-            <h5 class="mb-3">Força e Potência</h5>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <label class="form-label">Supino Máx (kg)</label>
-                    <input type="number" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Agachamento Máx (kg)</label>
-                    <input type="number" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Levantamento Terra (kg)</label>
-                    <input type="number" class="form-control">
-                </div>
-            </div>
-
-            <!-- VELOCIDADE E RESISTÊNCIA -->
-            <h5 class="mb-3">Velocidade e Resistência</h5>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <label class="form-label">Sprint 30m (s)</label>
-                    <input type="number" step="0.01" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Teste Cooper (m)</label>
-                    <input type="number" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">VO₂ Máx</label>
-                    <input type="number" class="form-control">
+                    <input type="number" step="0.01" class="form-control" name="imc" placeholder="Ex: 24.5">
                 </div>
             </div>
 
             <!-- OBSERVAÇÕES -->
             <div class="mb-4">
                 <label class="form-label">Observações Técnicas</label>
-                <textarea class="form-control" rows="4" placeholder="Análise do avaliador..."></textarea>
+                <textarea class="form-control" rows="4" name="observacoes" placeholder="Análise do avaliador..."></textarea>
             </div>
 
             <!-- AÇÕES -->
             <div class="d-flex justify-content-end gap-3">
                 <button type="reset" class="btn btn-outline-secondary">Limpar</button>
-                <button type="button" class="btn btn-outline-gold">Salvar Avaliação</button>
+                <button type="submit" class="btn btn-warning">Salvar Avaliação</button>
             </div>
         </form>
     </section>
@@ -161,30 +118,17 @@
                 <thead>
                     <tr>
                         <th>Atleta</th>
-                        <th>Modalidade</th>
                         <th>Data</th>
-                        <th>Peso</th>
+                        <th>Força</th>
+                        <th>Resistência</th>
+                        <th>Velocidade</th>
+                        <th>Flexibilidade</th>
                         <th>IMC</th>
-                        <th>Status</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>João Silva</td>
-                        <td>Rugby</td>
-                        <td>10/03/2025</td>
-                        <td>92 kg</td>
-                        <td>26.9</td>
-                        <td><span class="badge bg-success">Aprovado</span></td>
-                    </tr>
-                    <tr>
-                        <td>Pedro Almeida</td>
-                        <td>Futebol</td>
-                        <td>05/03/2025</td>
-                        <td>78 kg</td>
-                        <td>24.1</td>
-                        <td><span class="badge bg-warning text-dark">Em análise</span></td>
-                    </tr>
+                <tbody id="listaAvaliacoes">
+                    <!-- Avaliações serão carregadas aqui -->
                 </tbody>
             </table>
         </div>
@@ -196,6 +140,10 @@
 <footer class="text-center py-3 mt-5">
     © 2025 - AthleteManager | Protótipo Profissional
 </footer>
+
+<!-- JS -->
+<script src="../../static/js/avaliacoes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

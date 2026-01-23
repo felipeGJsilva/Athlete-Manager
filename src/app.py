@@ -86,6 +86,7 @@ class Treino(db.Model):
         return {
             'id': self.id,
             'atleta_id': self.atleta_id,
+            'atleta_nome': self.atleta.nome if self.atleta else None,
             'tipo': self.tipo,
             'descricao': self.descricao,
             'duracao_minutos': self.duracao_minutos,
@@ -113,6 +114,7 @@ class Avaliacao(db.Model):
         return {
             'id': self.id,
             'atleta_id': self.atleta_id,
+            'atleta_nome': self.atleta.nome if self.atleta else None,
             'forca': self.forca,
             'resistencia': self.resistencia,
             'velocidade': self.velocidade,
@@ -142,6 +144,7 @@ class Evolucao(db.Model):
         return {
             'id': self.id,
             'atleta_id': self.atleta_id,
+            'atleta_nome': self.atleta.nome if self.atleta else None,
             'peso': self.peso,
             'altura': self.altura,
             'imc': self.imc,

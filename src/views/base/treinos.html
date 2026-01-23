@@ -64,15 +64,48 @@
 
 <!-- MODAL ADICIONAR TREINO -->
 <div class="modal fade" id="modalAddTreino" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content p-3">
 
             <h4 class="mb-3">Novo Treino</h4>
 
             <form id="formAddTreino">
 
-                <label class="mt-2">Tipo de Treino</label>
-                <input class="form-control" name="tipo" required placeholder="Ex: Força, Resistência">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="mt-2">Atleta</label>
+                        <select class="form-control" name="atleta_id" required>
+                            <option value="">Selecione um atleta</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="mt-2">Tipo de Treino</label>
+                        <input class="form-control" name="tipo" required placeholder="Ex: Força, Resistência">
+                    </div>
+                </div>
+
+                <label class="mt-2">Descrição</label>
+                <textarea class="form-control" name="descricao" rows="3" placeholder="Descreva o treino..."></textarea>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="mt-2">Duração (minutos)</label>
+                        <input class="form-control" name="duracao_minutos" type="number" placeholder="60">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="mt-2">Data do Treino</label>
+                        <input class="form-control" name="data_treino" type="datetime-local">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="mt-2">Intensidade</label>
+                        <select class="form-control" name="intensidade">
+                            <option value="">Selecione</option>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
 
                 <button class="btn btn-success mt-3 w-100">Salvar</button>
             </form>
@@ -83,7 +116,7 @@
 
 <!-- MODAL EDITAR TREINO -->
 <div class="modal fade" id="modalEditTreino" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content p-3">
 
             <h4 class="mb-3">Editar Treino</h4>
@@ -92,8 +125,41 @@
 
                 <input type="hidden" name="id">
 
-                <label class="mt-2">Tipo de Treino</label>
-                <input class="form-control" name="tipo" required>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="mt-2">Atleta</label>
+                        <select class="form-control" name="atleta_id" required>
+                            <option value="">Selecione um atleta</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="mt-2">Tipo de Treino</label>
+                        <input class="form-control" name="tipo" required placeholder="Ex: Força, Resistência">
+                    </div>
+                </div>
+
+                <label class="mt-2">Descrição</label>
+                <textarea class="form-control" name="descricao" rows="3" placeholder="Descreva o treino..."></textarea>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="mt-2">Duração (minutos)</label>
+                        <input class="form-control" name="duracao_minutos" type="number" placeholder="60">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="mt-2">Data do Treino</label>
+                        <input class="form-control" name="data_treino" type="datetime-local">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="mt-2">Intensidade</label>
+                        <select class="form-control" name="intensidade">
+                            <option value="">Selecione</option>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
 
                 <button class="btn btn-primary mt-3 w-100">Salvar Alterações</button>
             </form>
