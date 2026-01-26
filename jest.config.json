@@ -1,0 +1,15 @@
+{
+  "testEnvironment": "node",
+  "collectCoverageFrom": [
+    "src/static/js/**/*.js",
+    "!src/static/js/**/*.min.js"
+  ],
+  "testMatch": [
+    "**/test_*.test.js",
+    "**/__tests__/**/*.js"
+  ],
+  "verbose": true,
+  "testPathIgnorePatterns": [
+    "/node_modules/"
+  ]
+}
