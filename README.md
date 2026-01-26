@@ -227,17 +227,48 @@ curl http://localhost:5000/api/atletas/1
 
 ---
 
-## Roadmap Futuro
+## Roadmap de Desenvolvimento
 
-- [ ] Sistema de autenticação JWT
-- [ ] Upload de imagens com persistência
-- [ ] Dashboard com gráficos de desempenho
-- [ ] Relatórios em PDF
-- [ ] Integração com wearables
-- [ ] Aplicação mobile nativa
-- [ ] Sistema de backup automático
+O projeto possui um roadmap detalhado para futuras melhorias, organizado em 5 fases principais:
+
+### Fases Planejadas
+
+1. **Dashboard com Gráficos** (Q1 2026)
+   - KPIs e indicadores de desempenho
+   - Visualizações de evolução
+   - Filtros por período
+
+2. **Exportação de Relatórios PDF** (Q1 2026)
+   - Relatórios por atleta
+   - Relatórios consolidados
+   - Customização de filtros
+
+3. **Sistema de Treinadores** (Q2 2026)
+   - Modelo de dados para treinadores
+   - Gerenciamento de múltiplos atletas
+   - Autenticação JWT com roles
+
+4. **Aplicativo Mobile** (Q2-Q3 2026)
+   - React Native para iOS e Android
+   - Sincronização offline
+   - Notificações push
+
+5. **Integração com Smartwatches** (Q3 2026)
+   - Apple HealthKit
+   - Google Fit
+   - Sincronização automática de dados
+
+**Veja [ROADMAP.md](ROADMAP.md) para detalhes completos sobre tecnologias, estimativas e dependências.**
+
+---
+
+## Backlog Futuro
+
 - [ ] Cache com Redis
-- [ ] Testes unitários e de integração
+- [ ] Testes unitários e de integração (em desenvolvimento)
+- [ ] Sistema de backup automático
+- [ ] CI/CD com GitHub Actions
+- [ ] Monitoramento e logging avançado
 
 ---
 
