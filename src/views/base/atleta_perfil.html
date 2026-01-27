@@ -77,12 +77,14 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="menuPrincipal">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link active" href="/">Perfil</a></li>
+                <li class="nav-item"><a class="nav-link" href="/treinos">Treinos</a></li>
+                <li class="nav-item"><a class="nav-link" href="/evolucao">Evolução</a></li>
+                <li class="nav-item"><a class="nav-link" href="/metas">Metas</a></li>
+            </ul>
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link active" href="/atletas">Meu Perfil</a></li>
-                <li class="nav-item"><a class="nav-link" href="/treinos">Meus Treinos</a></li>
-                <li class="nav-item"><a class="nav-link" href="/evolucao">Minha Evolução</a></li>
-                <li class="nav-item"><a class="nav-link" href="/avaliacoes">Minhas Avaliações</a></li>
-                <li class="nav-item"><a class="nav-link" href="/metas">Minhas Metas</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout">Sair</a></li>
             </ul>
         </div>
     </div>
@@ -103,24 +105,32 @@
     <!-- ESTATÍSTICAS RÁPIDAS -->
     <section class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="stat-card">
-                <h5>Progresso Meta</h5>
-            </div>
+            <a href="/metas" class="text-decoration-none">
+                <div class="stat-card">
+                    <h5>Progresso Meta</h5>
+                </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <h5>Treinos Realizados</h5>
-            </div>
+            <a href="/treinos" class="text-decoration-none">
+                <div class="stat-card">
+                    <h5>Treinos Realizados</h5>
+                </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <h5>Peso Atual</h5>
-            </div>
+            <a href="/evolucao" class="text-decoration-none">
+                <div class="stat-card">
+                    <h5>Peso Atual</h5>
+                </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <h5>IMC Atual</h5>
-            </div>
+            <a href="/evolucao" class="text-decoration-none">
+                <div class="stat-card">
+                    <h5>IMC Atual</h5>
+                </div>
+            </a>
         </div>
     </section>
 

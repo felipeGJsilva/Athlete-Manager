@@ -1217,6 +1217,8 @@ def logout():
 @app.route("/")
 @login_required
 def home():
+    if current_user.role == 'atleta':
+        return render_template("base/atleta_perfil.html")
     return render_template("base/base.html")
 
 @app.route("/competicoes")
