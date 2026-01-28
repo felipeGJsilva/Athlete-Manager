@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -269,14 +269,16 @@ def load_user(user_id):
 
 from functools import wraps
 
+from flask import abort
+
 def role_required(role):
     def decorator(f):
         @wraps(f)
         @login_required
         def decorated_function(*args, **kwargs):
             if current_user.role != role and current_user.role != 'admin':
-                flash('Acesso negado. Você não tem permissão para acessar esta página.', 'danger')
-                return redirect(url_for('home'))
+                # Retorna 403 para acesso não autorizado; o handler de erro cuidará do redirecionamento
+                abort(403)
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -1208,7 +1210,9 @@ def register():
 @app.route('/logout')
 @login_required
 def logout():
+    # Faz logout pelo Flask-Login e limpa a sessão para evitar restauração
     logout_user()
+    session.clear()
     flash('Você foi desconectado.', 'info')
     return redirect(url_for('login'))
 
@@ -1230,6 +1234,15 @@ def competicoes():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    # Redireciona para painel específico de acordo com o papel do usuário
+    if current_user.role == 'atleta':
+        return render_template("base/atleta_perfil.html")
+    elif current_user.role == 'treinador':
+        # Para treinadores, mostrar a tela de atletas (painel de treinador)
+        return render_template("base/atletas.html")
+    elif current_user.role == 'admin':
+        return render_template("base/admin.html")
+    # Padrão
     return render_template("base/base.html")
 
 @app.route("/atletas")
@@ -1287,8 +1300,8 @@ def perfil():
             flash("Perfil de atleta não encontrado.", "warning")
             return redirect(url_for('home'))
     else:
-        # Treinadores e admins são redirecionados para atletas
-        return redirect(url_for('atletas'))
+        # Treinadores e admins veem seu próprio perfil básico
+        return render_template("base/perfil.html", user=current_user)
 
 @app.route("/admin")
 @login_required
@@ -1296,6 +1309,27 @@ def perfil():
 def admin():
     users = User.query.all()
     return render_template("base/admin.html", users=users)
+
+# Handler para 403 - Acesso negado
+@app.errorhandler(403)
+def forbidden(e):
+    flash('Acesso negado: você não tem permissão para acessar essa página.', 'danger')
+    if current_user.is_authenticated:
+        if current_user.role == 'atleta':
+            return redirect(url_for('atletas'))
+        elif current_user.role == 'treinador':
+            return redirect(url_for('atletas'))
+        elif current_user.role == 'admin':
+            return redirect(url_for('admin'))
+    return redirect(url_for('login'))
+
+# Evita cache do navegador para prevenir reexibição de páginas autenticadas após logout
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 if __name__ == "__main__": 
     app.run(debug=True)

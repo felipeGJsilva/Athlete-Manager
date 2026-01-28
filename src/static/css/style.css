@@ -188,6 +188,51 @@ body {
     text-shadow: 0 2px 4px rgba(0,0,0,0.7);
 }
 
+/* ===== DASH CARD (ATLETAS) ===== */
+.dash-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #262626 50%, #1f1f1f 100%) !important;
+    border: 2px solid rgba(217,143,7,0.18) !important;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    min-height: 110px;
+    overflow: hidden;
+}
+
+.atleta-foto {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(217,143,7,0.6);
+    flex-shrink: 0;
+}
+
+.atleta-info h4 {
+    margin: 0 0 6px 0;
+    color: var(--gold-light);
+    font-weight: 700;
+}
+
+.atleta-info p {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 0.95rem;
+}
+
+@media (max-width: 576px) {
+    .dash-card {
+        flex-direction: row;
+        gap: 12px;
+    }
+    .atleta-foto {
+        width: 64px;
+        height: 64px;
+    }
+}
+
 /* ===== BOTÕES ===== */
 .btn-outline-gold {
     border: 1.5px solid var(--gold);

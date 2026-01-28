@@ -124,8 +124,8 @@ async function carregarAtletas() {
         const atletas = await response.json();
         const lista = document.getElementById("lista-atletas");
         lista.innerHTML = atletas.map(a => `
-            <div class="dash-card">
-                <img src="${a.foto === "default" ? "../../static/img/default-user.png" : a.foto}" class="atleta-foto">
+            <div class="dash-card" role="button" tabindex="0" onclick="viewAtleta(${a.id})">
+                <img src="${a.foto === "default" ? "../../static/img/default-user.png" : a.foto}" class="atleta-foto" alt="${a.nome}">
                 <div class="atleta-info">
                     <h4>${a.nome}</h4>
                     <p><strong>Esporte:</strong> ${a.esporte}</p>
@@ -194,3 +194,29 @@ async function excluirAtleta(id) {
         console.error('Erro ao excluir atleta:', error);
     }
 }
+
+// Exibir modal com detalhes do atleta
+async function viewAtleta(id) {
+    try {
+        const response = await fetch(`/api/atletas/${id}`);
+        if (!response.ok) {
+            alert('Atleta não encontrado');
+            return;
+        }
+        const a = await response.json();
+        document.getElementById('viewAtletaFoto').src = a.foto === 'default' ? '../../static/img/default-user.png' : a.foto;
+        document.getElementById('viewAtletaNome').textContent = a.nome || '--';
+        document.getElementById('viewAtletaEsporte').innerHTML = `<strong>Esporte:</strong> ${a.esporte || '--'}`;
+        document.getElementById('viewAtletaPosicao').innerHTML = `<strong>Posição/Prova:</strong> ${a.posicao || '--'}`;
+        document.getElementById('viewAtletaIdade').innerHTML = `<strong>Idade:</strong> ${a.idade || '--'}`;
+        document.getElementById('viewAtletaAltura').innerHTML = `<strong>Altura:</strong> ${a.altura || '--'}`;
+        document.getElementById('viewAtletaPeso').innerHTML = `<strong>Peso:</strong> ${a.peso || '--'}`;
+        document.getElementById('viewAtletaEmail').innerHTML = `<strong>Email:</strong> ${a.email || '--'}`;
+
+        new bootstrap.Modal(document.getElementById('modalViewAtleta')).show();
+    } catch (error) {
+        console.error('Erro ao carregar detalhes do atleta:', error);
+        alert('Erro ao carregar detalhes do atleta.');
+    }
+}
+
