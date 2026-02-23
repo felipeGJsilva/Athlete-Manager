@@ -239,7 +239,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), nullable=False)  # Removido unique=True para permitir múltiplos cadastros com mesmo email
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(50), nullable=False, default='atleta')  # admin, treinador, atleta
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1181,10 +1181,11 @@ def register():
             flash('Nome de usuário já existe.', 'danger')
             return redirect(url_for('register'))
         
-        if User.query.filter_by(email=email).first():
-            print("Email já existe")  # Debug
-            flash('Email já cadastrado.', 'danger')
-            return redirect(url_for('register'))
+        # Removido: validação de email único para permitir múltiplos cadastros com mesmo email
+        # if User.query.filter_by(email=email).first():
+        #     print("Email já existe")  # Debug
+        #     flash('Email já cadastrado.', 'danger')
+        #     return redirect(url_for('register'))
         
         # Validar role
         if role not in ['admin', 'treinador', 'atleta']:
