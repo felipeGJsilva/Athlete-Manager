@@ -1221,94 +1221,60 @@ def logout():
 @app.route("/")
 @login_required
 def home():
-    if current_user.role == 'atleta':
-        return render_template("base/atleta_perfil.html")
     return render_template("base/base.html")
 
 @app.route("/competicoes")
 @login_required
 @treinador_required
 def competicoes():
-    return render_template("base/competicoes.html")
+    return render_template("base/base.html")
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    # Redireciona para painel específico de acordo com o papel do usuário
-    if current_user.role == 'atleta':
-        return render_template("base/atleta_perfil.html")
-    elif current_user.role == 'treinador':
-        # Para treinadores, mostrar a tela de atletas (painel de treinador)
-        return render_template("base/atletas.html")
-    elif current_user.role == 'admin':
-        return render_template("base/admin.html")
-    # Padrão
     return render_template("base/base.html")
 
 @app.route("/atletas")
 @login_required
 def atletas():
-    if current_user.role == 'atleta':
-        return render_template("base/atleta_perfil.html")
-    else:
-        return render_template("base/atletas.html")
+    return render_template("base/base.html")
 
 @app.route("/avaliacoes")
 @login_required
 @treinador_required
 def avaliacoes():
-    return render_template("base/avaliacoes.html")
+    return render_template("base/base.html")
 
 @app.route("/metas")
 @login_required
 def metas():
-    if current_user.role == 'atleta':
-        # Atletas veem apenas suas próprias metas
-        return render_template("base/metas.html", atleta_only=True)
-    return render_template("base/metas.html")
+    return render_template("base/base.html")
 
 @app.route("/treinos")
 @login_required
 def treinos():
-    if current_user.role == 'atleta':
-        # Atletas veem apenas seus próprios treinos
-        return render_template("base/treinos.html", atleta_only=True)
-    return render_template("base/treinos.html")
+    return render_template("base/base.html")
 
 @app.route("/sobre")
 @login_required
 def sobre():
-    return render_template("base/sobre.html")
+    return render_template("base/base.html")
 
 @app.route("/evolucao")
 @login_required
 def evolucao():
-    if current_user.role == 'atleta':
-        # Atletas veem apenas sua própria evolução
-        return render_template("base/evolucao.html", atleta_only=True)
-    return render_template("base/evolucao.html")
+    return render_template("base/base.html")
 
 @app.route("/perfil")
 @login_required
 def perfil():
-    if current_user.role == 'atleta':
-        # Atletas veem seu próprio perfil
-        atleta = Atleta.query.filter_by(email=current_user.email).first()
-        if atleta:
-            return render_template("base/perfil.html", atleta=atleta)
-        else:
-            flash("Perfil de atleta não encontrado.", "warning")
-            return redirect(url_for('home'))
-    else:
-        # Treinadores e admins veem seu próprio perfil básico
-        return render_template("base/perfil.html", user=current_user)
+    return render_template("base/base.html")
 
 @app.route("/admin")
 @login_required
 @admin_required
 def admin():
-    users = User.query.all()
-    return render_template("base/admin.html", users=users)
+    return render_template("base/base.html")
 
 # Handler para 403 - Acesso negado
 @app.errorhandler(403)
@@ -1332,4 +1298,4 @@ def add_no_cache_headers(response):
     return response
 
 if __name__ == "__main__": 
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
