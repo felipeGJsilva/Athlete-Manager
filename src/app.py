@@ -1298,5 +1298,9 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
+@app.route('/src/views/<path:filename>')
+def serve_view(filename):
+    return render_template(filename)
+
 if __name__ == "__main__": 
     app.run(debug=True, port=5001)
