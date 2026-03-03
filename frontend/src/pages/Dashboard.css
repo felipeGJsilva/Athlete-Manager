@@ -1,30 +1,8 @@
-.dashboard {
-  padding: 2rem;
+/* Custom overrides if needed for dashboard; most styling via bootstrap + theme variables */
+.dashboard .card {
+  transition: transform 0.2s;
+  box-shadow: 0 0 10px var(--theme-gold);
 }
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.stat-card {
-  background-color: #f4f4f4;
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.stat-card h2 {
-  margin: 0 0 0.5rem 0;
-  color: #282c34;
-}
-
-.stat-card p {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #61dafb;
-  margin: 0;
+.dashboard .card:hover {
+  transform: scale(1.03);
 }

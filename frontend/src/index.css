@@ -1,5 +1,18 @@
+:root {
+  --theme-black: #000000;
+  --theme-gold: #d4af37;
+  --theme-dark-bg: #0b0b0c;
+  --theme-light-bg: #141414;
+  --theme-text: #eae6df;
+  --bs-body-bg: var(--theme-dark-bg);
+  --bs-body-color: var(--theme-text);
+  --bs-primary: var(--theme-gold);
+}
+
 body {
   margin: 0;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -10,4 +23,38 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Page wrapper used by all pages to create a slightly lighter panel over the dark background */
+.page {
+  background: var(--theme-light-bg);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 0 14px rgba(212,175,55,0.06);
+}
+
+/* Utility to make headings use the gold tone */
+.text-gold {
+  color: var(--theme-gold) !important;
+}
+
+/* Form inputs inside panels: make text white for visibility on dark backgrounds */
+.page .form-control,
+.page .form-select,
+.page textarea {
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.03);
+  border-color: rgba(212,175,55,0.18);
+}
+
+.page .form-control::placeholder,
+.page textarea::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+/* Gold-styled button helper */
+.btn-gold {
+  background: linear-gradient(180deg, var(--theme-gold), #b9892a);
+  color: #0b0b0c;
+  border: 1px solid rgba(0,0,0,0.2);
 }

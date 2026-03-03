@@ -2,9 +2,9 @@ import React from 'react';
 
 function Evolucoes() {
   return (
-    <div>
-      <h1>Evoluções</h1>
-      <p>Página em desenvolvimento.</p>
+    <div className="container py-5">
+      <h1 className="text-warning mb-4">Evoluções</h1>
+      <p className="text-light">Página em desenvolvimento.</p>
     </div>
   );
 }

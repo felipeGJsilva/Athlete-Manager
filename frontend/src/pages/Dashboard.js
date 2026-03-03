@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
+const iconMap = {
+  atletas: 'fa-user',
+  treinos: 'fa-dumbbell',
+  avaliacoes: 'fa-chart-line',
+  evolucoes: 'fa-running',
+  competicoes: 'fa-trophy',
+  metas: 'fa-bullseye',
+  notificacoes: 'fa-bell'
+};
+
 function Dashboard() {
   const [stats, setStats] = useState({
     atletas: 0,
@@ -36,37 +46,20 @@ function Dashboard() {
   }, []);
 
   return (
-    <div className="dashboard">
-      <h1>Dashboard</h1>
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h2>Atletas</h2>
-          <p>{stats.atletas}</p>
-        </div>
-        <div className="stat-card">
-          <h2>Treinos</h2>
-          <p>{stats.treinos}</p>
-        </div>
-        <div className="stat-card">
-          <h2>Avaliações</h2>
-          <p>{stats.avaliacoes}</p>
-        </div>
-        <div className="stat-card">
-          <h2>Evoluções</h2>
-          <p>{stats.evolucoes}</p>
-        </div>
-        <div className="stat-card">
-          <h2>Competições</h2>
-          <p>{stats.competicoes}</p>
-        </div>
-        <div className="stat-card">
-          <h2>Metas</h2>
-          <p>{stats.metas}</p>
-        </div>
-        <div className="stat-card">
-          <h2>Notificações</h2>
-          <p>{stats.notificacoes}</p>
-        </div>
+    <div className="container page py-5">
+      <h1 className="mb-4 text-gold">Dashboard</h1>
+      <div className="row g-3">
+        {Object.entries(stats).map(([key, value]) => (
+          <div key={key} className="col-sm-6 col-md-4 col-lg-3">
+            <div className="card h-100 text-center bg-dark border-warning">
+              <div className="card-body d-flex flex-column justify-content-center align-items-center">
+                <i className={`fas ${iconMap[key] || 'fa-chart-pie'} fa-3x text-warning mb-3`}></i>
+                <h5 className="card-title text-warning text-capitalize">{key}</h5>
+                <p className="display-4 mb-0 text-light">{value}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

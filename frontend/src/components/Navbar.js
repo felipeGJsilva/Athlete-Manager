@@ -1,23 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './Navbar.css';
 
 function Navbar() {
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/dashboard">Athlete Manager</Link>
+    <nav className="navbar navbar-expand-lg navbar-dark sticky-top" style={{backgroundColor: 'var(--theme-black)', borderBottom: '2px solid var(--theme-gold)'}}>
+      <div className="container-fluid">
+        <Link className="navbar-brand text-warning" to="/dashboard">Athlete Manager</Link>
+        <button
+          className="navbar-toggler text-warning"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li className="nav-item"><Link className="nav-link text-light" to="/dashboard">Dashboard</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/atletas">Atletas</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/treinos">Treinos</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/avaliacoes">Avaliações</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/evolucoes">Evoluções</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/competicoes">Competições</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/metas">Metas</Link></li>
+            <li className="nav-item"><Link className="nav-link text-light" to="/notificacoes">Notificações</Link></li>
+          </ul>
+        </div>
       </div>
-      <ul className="navbar-nav">
-        <li><Link to="/dashboard">Dashboard</Link></li>
-        <li><Link to="/atletas">Atletas</Link></li>
-        <li><Link to="/treinos">Treinos</Link></li>
-        <li><Link to="/avaliacoes">Avaliações</Link></li>
-        <li><Link to="/evolucoes">Evoluções</Link></li>
-        <li><Link to="/competicoes">Competições</Link></li>
-        <li><Link to="/metas">Metas</Link></li>
-        <li><Link to="/notificacoes">Notificações</Link></li>
-      </ul>
     </nav>
   );
 }
