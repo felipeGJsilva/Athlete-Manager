@@ -1,0 +1,27 @@
+INFO:     Will watch for changes in these directories: ['/workspaces/Athlete-Manager']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [31209] using WatchFiles
+INFO:     Started server process [31232]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:35842 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     187.32.41.105:0 - "GET /api/users/me HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:35846 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     187.32.41.105:0 - "GET / HTTP/1.1" 404 Not Found
+INFO:     187.32.41.105:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+WARNING:  WatchFiles detected changes in 'archive/legacy/test_api.py', 'archive/legacy/test_backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [31232]
+INFO:     Started server process [31927]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'src/app.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [31927]
+INFO:     Started server process [32171]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
