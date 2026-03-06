@@ -22,7 +22,8 @@ window.fetch = async (input, init = {}) => {
 		}
 		// Normalize requests: when running in the Vite dev server, use relative paths
 		// so the Vite proxy (configured in vite.config.js) can forward them to backend.
-		if (typeof input === 'string' && input.startsWith('http://127.0.0.1:8000')) {
+		const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+		if (typeof input === 'string' && input.startsWith(API_URL)) {
 			// convert to relative path so proxy works in remote dev environments
 			const url = new URL(input)
 			input = url.pathname + url.search

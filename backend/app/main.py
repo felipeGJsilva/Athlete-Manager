@@ -2,13 +2,19 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from . import models, schemas, auth
-from .database import engine, Base, get_db
+from .database import engine, Base, get_db, SessionLocal
+import os
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta, datetime
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title='Athlete Manager API')
+app = FastAPI(
+    title='Athlete Manager API',
+    docs_url='/docs',
+    redoc_url='/redoc',
+    openapi_url='/openapi.json'
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,6 +23,52 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+# --- Seed superadmin (created at startup if not exists) ---
+SUPERADMIN_USERNAME = os.environ.get('SUPERADMIN_USERNAME', 'admin')
+SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'admin@example.com')
+SUPERADMIN_PASSWORD = os.environ.get('SUPERADMIN_PASSWORD', 'admin1234')
+
+def _create_superadmin():
+    db = SessionLocal()
+    try:
+        user = db.query(models.User).filter(models.User.username == SUPERADMIN_USERNAME).first()
+        if not user:
+            user = db.query(models.User).filter(models.User.email == SUPERADMIN_EMAIL).first()
+        if not user:
+            hashed = auth.get_password_hash(SUPERADMIN_PASSWORD)
+            admin = models.User(username=SUPERADMIN_USERNAME, email=SUPERADMIN_EMAIL, password_hash=hashed, role='admin')
+            db.add(admin)
+            db.commit()
+            db.refresh(admin)
+            try:
+                print(f"Created superadmin user: {SUPERADMIN_USERNAME} <{SUPERADMIN_EMAIL}>")
+            except Exception:
+                pass
+        else:
+            # if user exists but password doesn't match the configured one, update it (dev-friendly)
+            try:
+                if not auth.verify_password(SUPERADMIN_PASSWORD, user.password_hash):
+                    user.password_hash = auth.get_password_hash(SUPERADMIN_PASSWORD)
+                    user.role = 'admin'
+                    db.add(user)
+                    db.commit()
+                    try:
+                        print(f"Updated superadmin password for: {SUPERADMIN_USERNAME}")
+                    except Exception:
+                        pass
+            except Exception:
+                # if verification fails for any reason, attempt to overwrite
+                user.password_hash = auth.get_password_hash(SUPERADMIN_PASSWORD)
+                user.role = 'admin'
+                db.add(user)
+                db.commit()
+    finally:
+        db.close()
+
+# run seed now
+_create_superadmin()
 
 @app.post('/auth/token')
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -55,6 +107,11 @@ def list_atletas(db: Session = Depends(get_db), current_user: models.User = Depe
 def create_atleta(atleta_in: schemas.AtletaCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.require_role('treinador'))):
     data = atleta_in.dict()
     data.pop('treinador_id', None)
+    # prevent duplicate email
+    if data.get('email'):
+        existing = db.query(models.Atleta).filter(models.Atleta.email == data.get('email')).first()
+        if existing:
+            return existing
     atleta = models.Atleta(**data, treinador_id=current_user.id)
     db.add(atleta)
     db.commit()
@@ -443,7 +500,9 @@ def delete_notificacao(id: int, db: Session = Depends(get_db), current_user: mod
 
 @app.get('/api/notificacoes/atleta/{atleta_id}/nao-lidas')
 def get_notificacoes_nao_lidas(atleta_id: int, db: Session = Depends(get_db)):
-    db.query(models.Atleta).filter(models.Atleta.id == atleta_id).first() or HTTPException(status_code=404, detail='Atleta not found')
+    atleta = db.query(models.Atleta).filter(models.Atleta.id == atleta_id).first()
+    if not atleta:
+        raise HTTPException(status_code=404, detail='Atleta not found')
     count = db.query(models.Notificacao).filter(models.Notificacao.atleta_id == atleta_id, models.Notificacao.lida == False).count()
     return {'atleta_id': atleta_id, 'nao_lidas': count}
 
