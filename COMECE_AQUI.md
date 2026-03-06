@@ -2,7 +2,7 @@
 
 ## 🚀 Começar em 3 Passos
 
-### 1️⃣ Instalar Dependências
+### 1️⃣ Instalar Dependências (backend)
 ```bash
 pip install -r requirements.txt
 ```
@@ -13,17 +13,24 @@ cd src
 python app.py
 ```
 
-Você verá:
-```
- * Running on http://127.0.0.1:5000
+*Se quiser usar a interface React:*
+```bash
+cd frontend
+npm install        # instala React + bootstrap
+npm start          # executa o frontend em http://localhost:3000
 ```
 
 ### 3️⃣ Testar os Endpoints
 ```bash
 # Em outro terminal
-cd /workspaces/Atlhete-Manager
 python test_api.py
 ```
+
+Você verá:
+```
+ * Running on http://127.0.0.1:5000
+```
+
 
 ---
 
@@ -88,11 +95,8 @@ console.log(atletas);
 
 ## 🔗 Endpoints Principais
 
-### Atletas
-- `GET /api/atletas` - Listar todos
-- `POST /api/atletas` - Criar novo
-- `PUT /api/atletas/{id}` - Atualizar
-- `DELETE /api/atletas/{id}` - Deletar
+### Atletas (agora apenas front-end)
+- A listagem e cadastro de atletas são feitos localmente no navegador; os endpoints da API não são usados.
 
 ### Treinos
 - `GET /api/treinos?atleta_id=1` - Listar por atleta
@@ -100,11 +104,16 @@ console.log(atletas);
 - `PUT /api/treinos/{id}` - Atualizar
 - `DELETE /api/treinos/{id}` - Deletar
 
-### Metas
-- `GET /api/metas?atleta_id=1` - Listar metas do atleta
-- `POST /api/metas` - Criar meta
-- `PUT /api/metas/{id}` - Atualizar (incluindo progresso)
-- `DELETE /api/metas/{id}` - Deletar
+### Metas (apenas front-end)
+- O cadastro e acompanhamento de metas são realizados no navegador; não há comunicação com o backend.
+
+### Evoluções (gráficos)
+- Página exibe gráfico anual de peso, gordura e massa muscular.
+- Permite adicionar medições mensais, filtrando por ano.
+
+### Competições (front-end)
+- Cadastro de competições futuras e realizadas com data, hora, local, resultado, posição e pontos.
+- Lista armazenada localmente no navegador.
 
 ### Notificações
 - `GET /api/notificacoes?atleta_id=1` - Listar notificações

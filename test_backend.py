@@ -16,7 +16,7 @@ from pathlib import Path
 # Adicionar o caminho src ao sys.path para importar o app
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from app import app, db, Atleta, Treino, Avaliacao, Evolucao, Meta, Notificacao
+from app import app, db, Atleta, Treino, Avaliacao, Evolucao, Meta, Notificacao, User
 
 
 @pytest.fixture
@@ -24,10 +24,20 @@ def client():
     """Configuração do cliente de teste e banco de dados em memória"""
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    # Disable login restrictions during tests
+    app.config['LOGIN_DISABLED'] = True
     
     with app.app_context():
         db.create_all()
-        yield app.test_client()
+        # create dummy trainer user and log in via session
+        trainer = User(username='trainer', email='trainer@example.com', password_hash='x', role='treinador')
+        db.session.add(trainer)
+        db.session.commit()
+        client_instance = app.test_client()
+        # set session _user_id to simulate login
+        with client_instance.session_transaction() as sess:
+            sess['_user_id'] = str(trainer.id)
+        yield client_instance
         db.session.remove()
         db.drop_all()
 
@@ -212,6 +222,60 @@ class TestAtletas:
         )
         
         assert response.status_code == 400
+
+
+# ============= TESTES DE METAS =============
+
+class TestMetas:
+    """Testes para funcionalidades de metas"""
+
+    def test_criar_listar_deletar_meta(self, client, atleta_padrao):
+        # criar atleta primeiro
+        create_at = client.post(
+            '/api/atletas',
+            data=json.dumps(atleta_padrao),
+            content_type='application/json'
+        )
+        atleta_id = json.loads(create_at.data)['id']
+
+        # criar meta
+        meta_data = {
+            'atleta_id': atleta_id,
+            'titulo': 'Perder peso',
+            'descricao': 'Chegar a 75kg',
+            'data_conclusao_esperada': datetime.utcnow().isoformat()
+        }
+        resp = client.post('/api/metas', data=json.dumps(meta_data), content_type='application/json')
+        assert resp.status_code == 201
+        meta = json.loads(resp.data)
+        assert meta['titulo'] == 'Perder peso'
+        mid = meta['id']
+
+        # listar metas do atleta
+        resp = client.get(f'/api/metas?atleta_id={atleta_id}')
+        assert resp.status_code == 200
+        lista = json.loads(resp.data)
+        assert any(m['id'] == mid for m in lista)
+
+        # atualizar progresso e status
+        update = {'progresso': 50}
+        resp = client.put(f'/api/metas/{mid}', data=json.dumps(update), content_type='application/json')
+        assert resp.status_code == 200
+        updated = json.loads(resp.data)
+        assert updated['progresso'] == 50
+
+        # marcar concluída
+        resp = client.put(f'/api/metas/{mid}', data=json.dumps({'status': 'concluida'}), content_type='application/json')
+        assert resp.status_code == 200
+        updated = json.loads(resp.data)
+        assert updated['status'] == 'concluida'
+        assert updated['data_conclusao_real'] is not None
+
+        # deletar
+        resp = client.delete(f'/api/metas/{mid}')
+        assert resp.status_code == 200
+        resp = client.get(f'/api/metas/{mid}')
+        assert resp.status_code == 404
 
 
 # ============= TESTES DE TREINOS =============
