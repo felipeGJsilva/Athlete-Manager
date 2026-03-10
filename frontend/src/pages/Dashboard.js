@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 const iconMap = {
@@ -12,6 +13,9 @@ const iconMap = {
 };
 
 function Dashboard() {
+
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     atletas: 0,
     treinos: 0,
@@ -23,12 +27,31 @@ function Dashboard() {
   });
 
   useEffect(() => {
+
     const fetchStats = async () => {
+
       try {
-        const endpoints = ['atletas', 'treinos', 'avaliacoes', 'evolucoes', 'competicoes', 'metas', 'notificacoes'];
-        const promises = endpoints.map(endpoint => fetch(`http://localhost:5000/api/${endpoint}`));
-        const responses = await Promise.all(promises);
-        const data = await Promise.all(responses.map(res => res.json()));
+
+        const endpoints = [
+          'atletas',
+          'treinos',
+          'avaliacoes',
+          'evolucoes',
+          'competicoes',
+          'metas',
+          'notificacoes'
+        ];
+
+        const responses = await Promise.all(
+          endpoints.map(endpoint =>
+            fetch(`http://localhost:5000/api/${endpoint}`)
+          )
+        );
+
+        const data = await Promise.all(
+          responses.map(res => res.json())
+        );
+
         setStats({
           atletas: data[0].length,
           treinos: data[1].length,
@@ -38,30 +61,62 @@ function Dashboard() {
           metas: data[5].length,
           notificacoes: data[6].length
         });
+
       } catch (error) {
+
         console.error('Error fetching stats:', error);
+
       }
+
     };
+
     fetchStats();
+
   }, []);
 
+  const handleNavigate = (key) => {
+    navigate(`/${key}`);
+  };
+
   return (
-    <div className="container page py-5">
-      <h1 className="mb-4 text-gold">Dashboard</h1>
-      <div className="row g-3">
+
+    <div className="container-fluid bg-black text-light min-vh-100 dashboard-container">
+
+      <h1 className="dashboard-title">Dashboard</h1>
+
+      <div className="dashboard-grid">
+
         {Object.entries(stats).map(([key, value]) => (
-          <div key={key} className="col-sm-6 col-md-4 col-lg-3">
-            <div className="card h-100 text-center bg-dark border-warning">
-              <div className="card-body d-flex flex-column justify-content-center align-items-center">
-                <i className={`fas ${iconMap[key] || 'fa-chart-pie'} fa-3x text-warning mb-3`}></i>
-                <h5 className="card-title text-warning text-capitalize">{key}</h5>
-                <p className="display-4 mb-0 text-light">{value}</p>
-              </div>
-            </div>
+
+          <div
+            key={key}
+            className="dashboard-card"
+            onClick={() => handleNavigate(key)}
+            style={{ cursor: 'pointer' }}
+          >
+
+            <i className={`fas ${iconMap[key] || 'fa-chart-pie'} dashboard-icon`}></i>
+
+            <h5 className="dashboard-card-title">
+              {key}
+            </h5>
+
+            <p className="dashboard-number">
+              {value}
+            </p>
+
+            <small style={{ opacity: 0.7 }}>
+              Ver detalhes →
+            </small>
+
           </div>
+
         ))}
+
       </div>
+
     </div>
+
   );
 }
 

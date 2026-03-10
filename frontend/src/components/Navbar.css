@@ -11,6 +11,16 @@
   text-decoration: none;
   font-size: 1.5rem;
   font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* glow no nome da marca */
+.navbar-brand a:hover {
+  color: #ffd700;
+  text-shadow:
+    0 0 5px #ffd700,
+    0 0 10px #ffd700,
+    0 0 20px #ffd700;
 }
 
 .navbar-nav {
@@ -29,9 +39,24 @@
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
 }
 
+/* efeito de luz ao passar o mouse */
 .navbar-nav a:hover {
-  background-color: #61dafb;
+  color: #ffd700;
+  background-color: rgba(255, 215, 0, 0.1);
+  text-shadow:
+    0 0 5px #ffd700,
+    0 0 10px #ffd700,
+    0 0 20px #ffd700;
+}
+
+/* link ativo (se usar NavLink) */
+.navbar-nav a.active {
+  color: #ffd700;
+  text-shadow:
+    0 0 5px #ffd700,
+    0 0 10px #ffd700,
+    0 0 20px #ffd700;
 }

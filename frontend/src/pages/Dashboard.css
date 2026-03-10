@@ -1,8 +1,47 @@
-/* Custom overrides if needed for dashboard; most styling via bootstrap + theme variables */
-.dashboard .card {
-  transition: transform 0.2s;
-  box-shadow: 0 0 10px var(--theme-gold);
+.dashboard-container {
+  padding: 40px;
 }
-.dashboard .card:hover {
-  transform: scale(1.03);
+
+.dashboard-title {
+  color: #f1c40f;
+  font-weight: 600;
+  margin-bottom: 35px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 28px;
+}
+
+.dashboard-card {
+  background: #121212;
+  border: 1px solid #f1c40f;
+  border-radius: 12px;
+  padding: 35px 20px;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+.dashboard-card:hover{
+transform: translateY(-5px);
+box-shadow:0 8px 20px rgba(0,0,0,0.4);
+transition:0.2s;
+}
+
+.dashboard-icon {
+  font-size: 40px;
+  color: #f1c40f;
+  margin-bottom: 15px;
+}
+
+.dashboard-card-title {
+  text-transform: capitalize;
+  color: #f1c40f;
+  margin-bottom: 10px;
+}
+
+.dashboard-number {
+  font-size: 42px;
+  font-weight: bold;
+  color: #fff;
 }
