@@ -20,12 +20,38 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* SCROLLBAR PERSONALIZADA (mais fina) */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-gold);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffd700;
+}
+
+/* Scroll suave no site */
+
+html {
+  scroll-behavior: smooth;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
 /* Page wrapper used by all pages to create a slightly lighter panel over the dark background */
+
 .page {
   background: var(--theme-light-bg);
   border-radius: 8px;
@@ -34,11 +60,13 @@ code {
 }
 
 /* Utility to make headings use the gold tone */
+
 .text-gold {
   color: var(--theme-gold) !important;
 }
 
-/* Form inputs inside panels: make text white for visibility on dark backgrounds */
+/* Form inputs inside panels */
+
 .page .form-control,
 .page .form-select,
 .page textarea {
@@ -53,6 +81,7 @@ code {
 }
 
 /* Gold-styled button helper */
+
 .btn-gold {
   background: linear-gradient(180deg, var(--theme-gold), #b9892a);
   color: #0b0b0c;

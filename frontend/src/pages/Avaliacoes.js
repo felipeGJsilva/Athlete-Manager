@@ -1,110 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { criarNotificacao } from "../utils/notificacao";
+
+const STORAGE_KEY = "avaliacoesData";
 
 function Avaliacoes() {
 
+  const [avaliacoes, setAvaliacoes] = useState([]);
+
   const [form, setForm] = useState({
-    atleta_id: '',
-    peso: '',
-    altura: '',
-    gordura: '',
-    observacoes: '',
-    data: ''
+    atleta_id: "",
+    peso: "",
+    altura: "",
+    gordura: "",
+    observacoes: "",
+    data: ""
   });
 
-  const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
+  /* CARREGAR AVALIAÇÕES */
+
   useEffect(() => {
 
-    const fetchAval = async () => {
+    const stored = localStorage.getItem(STORAGE_KEY);
 
-      try {
-
-        const res = await fetch('http://localhost:5000/api/avaliacoes');
-
-        if (res.ok) {
-
-          const data = await res.json();
-          setAvaliacoes(data);
-
-        }
-
-      } catch (err) {
-
-        console.error(err);
-
-      }
-
-    };
-
-    fetchAval();
+    if (stored) {
+      setAvaliacoes(JSON.parse(stored));
+    }
 
   }, []);
+
+  const salvarStorage = (lista) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+  };
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
 
     e.preventDefault();
-
     setLoading(true);
     setMessage(null);
 
-    try {
+    const novaAvaliacao = {
 
-      const res = await fetch('http://localhost:5000/api/avaliacoes', {
+      id: Date.now(),
 
-        method: 'POST',
+      atleta_id: form.atleta_id || null,
 
-        headers: { 'Content-Type': 'application/json' },
+      peso: form.peso || null,
 
-        body: JSON.stringify({
+      altura: form.altura || null,
 
-          atleta_id: form.atleta_id || null,
-          peso: parseFloat(form.peso) || null,
-          altura: parseFloat(form.altura) || null,
-          gordura_percentual: form.gordura || null,
-          observacoes: form.observacoes,
-          data: form.data || new Date().toISOString()
+      gordura_percentual: form.gordura || null,
 
-        })
+      observacoes: form.observacoes,
 
-      });
+      data: form.data || new Date().toISOString()
 
-      if (!res.ok) throw new Error('Erro ao salvar avaliação');
+    };
 
-      const saved = await res.json();
+    const updated = [novaAvaliacao, ...avaliacoes];
 
-      setAvaliacoes([saved, ...avaliacoes]);
+    setAvaliacoes(updated);
+    salvarStorage(updated);
 
-      setMessage({
-        type: 'success',
-        text: 'Avaliação salva com sucesso!'
-      });
+    /* NOTIFICAÇÃO AUTOMÁTICA */
 
-      setForm({
-        atleta_id: '',
-        peso: '',
-        altura: '',
-        gordura: '',
-        observacoes: '',
-        data: ''
-      });
+    criarNotificacao(
+      `Nova avaliação física registrada (Atleta ${form.atleta_id || "N/A"})`,
+      novaAvaliacao.data
+    );
 
-    } catch (err) {
+    setMessage({
+      type: "success",
+      text: "Avaliação salva com sucesso!"
+    });
 
-      setMessage({
-        type: 'danger',
-        text: err.message
-      });
+    setForm({
+      atleta_id: "",
+      peso: "",
+      altura: "",
+      gordura: "",
+      observacoes: "",
+      data: ""
+    });
 
-    } finally {
-
-      setLoading(false);
-
-    }
+    setLoading(false);
 
   };
 
@@ -117,11 +101,8 @@ function Avaliacoes() {
       <div className="d-flex justify-content-between align-items-center mb-4">
 
         <h1 className="text-gold">
-
           <i className="fas fa-chart-line me-2"></i>
-
           Avaliações
-
         </h1>
 
         <span className="badge bg-warning text-dark fs-6">
@@ -133,21 +114,17 @@ function Avaliacoes() {
       {/* ALERT */}
 
       {message && (
-        <div className={`alert alert-${message.type} shadow-sm`}>
+        <div className={`alert alert-${message.type}`}>
           {message.text}
         </div>
       )}
 
-      {/* FORM CARD */}
+      {/* FORM */}
 
-      <div className="card bg-dark border-warning mb-4 shadow">
+      <div className="card bg-dark border-warning mb-4">
 
         <div className="card-header bg-warning text-dark fw-bold">
-
-          <i className="fas fa-plus-circle me-2"></i>
-
           Nova Avaliação Física
-
         </div>
 
         <div className="card-body">
@@ -157,7 +134,6 @@ function Avaliacoes() {
             <div className="row g-3">
 
               <div className="col-md-2">
-
                 <label className="form-label text-light">
                   Atleta ID
                 </label>
@@ -166,14 +142,12 @@ function Avaliacoes() {
                   name="atleta_id"
                   value={form.atleta_id}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
+                  className="form-control bg-dark text-light border-warning"
                   placeholder="ID"
                 />
-
               </div>
 
               <div className="col-md-2">
-
                 <label className="form-label text-light">
                   Peso (kg)
                 </label>
@@ -182,14 +156,11 @@ function Avaliacoes() {
                   name="peso"
                   value={form.peso}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="80"
+                  className="form-control bg-dark text-light border-warning"
                 />
-
               </div>
 
               <div className="col-md-2">
-
                 <label className="form-label text-light">
                   Altura (m)
                 </label>
@@ -198,14 +169,11 @@ function Avaliacoes() {
                   name="altura"
                   value={form.altura}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="1.80"
+                  className="form-control bg-dark text-light border-warning"
                 />
-
               </div>
 
               <div className="col-md-2">
-
                 <label className="form-label text-light">
                   Gordura %
                 </label>
@@ -214,14 +182,11 @@ function Avaliacoes() {
                   name="gordura"
                   value={form.gordura}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="15%"
+                  className="form-control bg-dark text-light border-warning"
                 />
-
               </div>
 
               <div className="col-md-4">
-
                 <label className="form-label text-light">
                   Data
                 </label>
@@ -231,13 +196,11 @@ function Avaliacoes() {
                   name="data"
                   value={form.data}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
+                  className="form-control bg-dark text-light border-warning"
                 />
-
               </div>
 
               <div className="col-12">
-
                 <label className="form-label text-light">
                   Observações
                 </label>
@@ -246,28 +209,18 @@ function Avaliacoes() {
                   name="observacoes"
                   value={form.observacoes}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="Notas sobre avaliação física"
+                  className="form-control bg-dark text-light border-warning"
                 />
-
               </div>
 
               <div className="col-md-4">
 
                 <button
-                  className="btn btn-warning w-100 fw-bold"
+                  className="btn btn-warning w-100"
                   disabled={loading}
                 >
 
-                  {loading
-                    ? 'Salvando...'
-                    : (
-                      <>
-                        <i className="fas fa-save me-2"></i>
-                        Salvar Avaliação
-                      </>
-                    )
-                  }
+                  {loading ? "Salvando..." : "Salvar Avaliação"}
 
                 </button>
 
@@ -283,21 +236,17 @@ function Avaliacoes() {
 
       {/* LISTA */}
 
-      <div className="card bg-dark border-warning shadow">
+      <div className="card bg-dark border-warning">
 
-        <div className="card-header bg-dark text-warning fw-bold">
-
-          <i className="fas fa-history me-2"></i>
-
+        <div className="card-header text-warning fw-bold">
           Avaliações Recentes
-
         </div>
 
         <div className="card-body p-0">
 
           <div className="table-responsive">
 
-            <table className="table table-dark table-hover align-middle mb-0">
+            <table className="table table-dark table-hover mb-0">
 
               <thead className="table-warning text-dark">
 
@@ -315,37 +264,37 @@ function Avaliacoes() {
               <tbody>
 
                 {avaliacoes.length === 0 && (
+
                   <tr>
-                    <td colSpan="6" className="text-center text-secondary py-4">
+                    <td colSpan="6" className="text-center py-4 text-secondary">
                       Nenhuma avaliação registrada
                     </td>
                   </tr>
+
                 )}
 
                 {avaliacoes.map((a, index) => (
 
-                  <tr key={a.id || index}>
+                  <tr key={a.id}>
 
                     <td className="text-warning fw-bold">
                       {index + 1}
                     </td>
 
-                    <td>{a.atleta_id || '-'}</td>
+                    <td>{a.atleta_id || "-"}</td>
 
-                    <td>{a.peso || '-'}</td>
+                    <td>{a.peso || "-"}</td>
 
-                    <td>{a.altura || '-'}</td>
+                    <td>{a.altura || "-"}</td>
 
                     <td>
                       <span className="badge bg-warning text-dark">
-                        {a.gordura_percentual || a.gordura || '-'}
+                        {a.gordura_percentual || "-"}
                       </span>
                     </td>
 
                     <td>
-                      {a.data
-                        ? new Date(a.data).toLocaleDateString()
-                        : '-'}
+                      {new Date(a.data).toLocaleDateString()}
                     </td>
 
                   </tr>

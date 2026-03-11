@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { criarNotificacao } from '../utils/notificacao';
 
 const STORAGE_KEY_METAS = 'metasData';
 
@@ -29,10 +30,17 @@ function Metas() {
   };
 
   const deleteMeta = (id) => {
+
     if (!window.confirm('Excluir esta meta?')) return;
+
+    const meta = metas.find(m => m.id === id);
+
     const updated = metas.filter(m => m.id !== id);
+
     setMetas(updated);
     saveToStorage(updated);
+
+    criarNotificacao(`Meta removida: ${meta.titulo}`);
   };
 
   const handleChange = (e) => {
@@ -62,7 +70,9 @@ function Metas() {
     setMetas(updated);
     saveToStorage(updated);
 
-    setMessage({ type: 'success', text: 'Meta adicionada' });
+    criarNotificacao(`Nova meta criada: ${form.titulo}`);
+
+    setMessage({ type: 'success', text: 'Meta adicionada com sucesso!' });
 
     setForm({
       atleta_id: '',
@@ -85,6 +95,10 @@ function Metas() {
     return 'bg-secondary';
   };
 
+  const metasFiltradas = filterAtleta
+    ? metas.filter(m => m.atleta_id === filterAtleta)
+    : metas;
+
   return (
 
     <div className="container-fluid bg-black text-light min-vh-100 p-4">
@@ -97,8 +111,19 @@ function Metas() {
         </div>
       )}
 
-      {/* CARD FORM */}
+      <div className="mb-4">
+
+        <input
+          className="form-control bg-dark text-light border-warning"
+          placeholder="Filtrar por ID do atleta"
+          value={filterAtleta}
+          onChange={(e)=>setFilterAtleta(e.target.value)}
+        />
+
+      </div>
+
       <div className="card bg-dark border-warning mb-4">
+
         <div className="card-body">
 
           <h5 className="card-title text-warning mb-3">
@@ -119,7 +144,7 @@ function Metas() {
                 />
               </div>
 
-              <div className="col-md-3">
+              <div className="col-md-4">
                 <input
                   name="titulo"
                   value={form.titulo}
@@ -140,7 +165,7 @@ function Metas() {
                 />
               </div>
 
-              <div className="col-md-2">
+              <div className="col-md-3">
                 <input
                   type="number"
                   min="0"
@@ -149,21 +174,8 @@ function Metas() {
                   value={form.progresso}
                   onChange={handleChange}
                   className="form-control bg-black text-light border-warning"
-                  placeholder="Progresso"
+                  placeholder="Progresso (%)"
                 />
-              </div>
-
-              <div className="col-md-2">
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className="form-control bg-black text-light border-warning"
-                >
-                  <option value="ativa">Ativa</option>
-                  <option value="concluida">Concluída</option>
-                  <option value="cancelada">Cancelada</option>
-                </select>
               </div>
 
             </div>
@@ -190,6 +202,7 @@ function Metas() {
           </form>
 
         </div>
+
       </div>
 
       {/* LISTA */}
@@ -214,14 +227,12 @@ function Metas() {
 
           <tbody>
 
-            {metas.map(m => (
+            {metasFiltradas.map(m => (
 
               <tr key={m.id}>
 
                 <td>{m.id}</td>
-
-                <td>{m.atleta_id}</td>
-
+                <td>{m.atleta_id || '-'}</td>
                 <td>{m.titulo}</td>
 
                 <td>

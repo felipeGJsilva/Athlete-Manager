@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Dashboard.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Dashboard.css";
 
 const iconMap = {
-  atletas: 'fa-user',
-  treinos: 'fa-dumbbell',
-  avaliacoes: 'fa-chart-line',
-  evolucoes: 'fa-running',
-  competicoes: 'fa-trophy',
-  metas: 'fa-bullseye',
-  notificacoes: 'fa-bell'
+  atletas: "fa-user",
+  treinos: "fa-dumbbell",
+  avaliacoes: "fa-chart-line",
+  competicoes: "fa-trophy",
+  metas: "fa-bullseye",
+  notificacoes: "fa-bell"
 };
 
 function Dashboard() {
@@ -20,7 +19,6 @@ function Dashboard() {
     atletas: 0,
     treinos: 0,
     avaliacoes: 0,
-    evolucoes: 0,
     competicoes: 0,
     metas: 0,
     notificacoes: 0
@@ -28,49 +26,35 @@ function Dashboard() {
 
   useEffect(() => {
 
-    const fetchStats = async () => {
+    const carregarStats = () => {
 
-      try {
+      const atletas = JSON.parse(localStorage.getItem("atletasData")) || [];
+      const treinos = JSON.parse(localStorage.getItem("treinosData")) || [];
+      const avaliacoes = JSON.parse(localStorage.getItem("avaliacoesData")) || [];
+      const competicoes = JSON.parse(localStorage.getItem("competicoesData")) || [];
+      const metas = JSON.parse(localStorage.getItem("metasData")) || [];
+      const notificacoes = JSON.parse(localStorage.getItem("notificacoes")) || [];
 
-        const endpoints = [
-          'atletas',
-          'treinos',
-          'avaliacoes',
-          'evolucoes',
-          'competicoes',
-          'metas',
-          'notificacoes'
-        ];
-
-        const responses = await Promise.all(
-          endpoints.map(endpoint =>
-            fetch(`http://localhost:5000/api/${endpoint}`)
-          )
-        );
-
-        const data = await Promise.all(
-          responses.map(res => res.json())
-        );
-
-        setStats({
-          atletas: data[0].length,
-          treinos: data[1].length,
-          avaliacoes: data[2].length,
-          evolucoes: data[3].length,
-          competicoes: data[4].length,
-          metas: data[5].length,
-          notificacoes: data[6].length
-        });
-
-      } catch (error) {
-
-        console.error('Error fetching stats:', error);
-
-      }
+      setStats({
+        atletas: atletas.length,
+        treinos: treinos.length,
+        avaliacoes: avaliacoes.length,
+        competicoes: competicoes.length,
+        metas: metas.length,
+        notificacoes: notificacoes.length
+      });
 
     };
 
-    fetchStats();
+    carregarStats();
+
+    /* Atualiza automaticamente se o localStorage mudar */
+
+    window.addEventListener("storage", carregarStats);
+
+    return () => {
+      window.removeEventListener("storage", carregarStats);
+    };
 
   }, []);
 
@@ -82,7 +66,9 @@ function Dashboard() {
 
     <div className="container-fluid bg-black text-light min-vh-100 dashboard-container">
 
-      <h1 className="dashboard-title">Dashboard</h1>
+      <h1 className="dashboard-title">
+        Dashboard
+      </h1>
 
       <div className="dashboard-grid">
 
@@ -92,10 +78,10 @@ function Dashboard() {
             key={key}
             className="dashboard-card"
             onClick={() => handleNavigate(key)}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
           >
 
-            <i className={`fas ${iconMap[key] || 'fa-chart-pie'} dashboard-icon`}></i>
+            <i className={`fas ${iconMap[key]} dashboard-icon`}></i>
 
             <h5 className="dashboard-card-title">
               {key}
@@ -118,6 +104,7 @@ function Dashboard() {
     </div>
 
   );
+
 }
 
 export default Dashboard;

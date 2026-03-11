@@ -1,94 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { criarNotificacao } from "../utils/notificacao";
+
+const STORAGE_KEY = "treinosData";
 
 function Treinos() {
 
+  const [treinos, setTreinos] = useState([]);
+
   const [form, setForm] = useState({
-    atleta_id: '',
-    tipo: '',
-    duracao: '',
-    intensidade: 'Média',
-    descricao: '',
-    data: ''
+    atleta_id: "",
+    tipo: "",
+    duracao: "",
+    intensidade: "Média",
+    descricao: "",
+    data: ""
   });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
-  const [treinos, setTreinos] = useState([]);
+
+  /* CARREGAR DO LOCALSTORAGE */
 
   useEffect(() => {
-    const fetchTreinos = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/treinos');
 
-        if (res.ok) {
-          const data = await res.json();
-          setTreinos(data);
-        }
+    const stored = localStorage.getItem(STORAGE_KEY);
 
-      } catch (err) {
-        console.error(err);
-      }
-    };
+    if (stored) {
+      setTreinos(JSON.parse(stored));
+    }
 
-    fetchTreinos();
   }, []);
+
+  const salvarStorage = (lista) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+  };
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
 
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
-    try {
+    const novoTreino = {
+      id: Date.now(),
+      atleta_id: form.atleta_id || null,
+      tipo: form.tipo,
+      duracao: form.duracao,
+      intensidade: form.intensidade,
+      descricao: form.descricao,
+      data: form.data || new Date().toISOString()
+    };
 
-      const res = await fetch('http://localhost:5000/api/treinos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          atleta_id: form.atleta_id || null,
-          tipo: form.tipo,
-          duracao: form.duracao,
-          intensidade: form.intensidade,
-          descricao: form.descricao,
-          data: form.data || new Date().toISOString()
-        })
-      });
+    const updated = [novoTreino, ...treinos];
 
-      if (!res.ok) throw new Error('Erro ao salvar treino');
+    setTreinos(updated);
+    salvarStorage(updated);
 
-      const saved = await res.json();
+    /* NOTIFICAÇÃO AUTOMÁTICA */
 
-      setTreinos([saved, ...treinos]);
+    criarNotificacao(
+      `Novo treino registrado: ${form.tipo}`,
+      novoTreino.data
+    );
 
-      setMessage({
-        type: 'success',
-        text: 'Treino cadastrado com sucesso!'
-      });
+    setMessage({
+      type: "success",
+      text: "Treino cadastrado com sucesso!"
+    });
 
-      setForm({
-        atleta_id: '',
-        tipo: '',
-        duracao: '',
-        intensidade: 'Média',
-        descricao: '',
-        data: ''
-      });
+    setForm({
+      atleta_id: "",
+      tipo: "",
+      duracao: "",
+      intensidade: "Média",
+      descricao: "",
+      data: ""
+    });
 
-    } catch (err) {
-
-      setMessage({
-        type: 'danger',
-        text: err.message
-      });
-
-    } finally {
-
-      setLoading(false);
-
-    }
+    setLoading(false);
 
   };
 
@@ -114,17 +105,16 @@ function Treinos() {
       {/* ALERT */}
 
       {message && (
-        <div className={`alert alert-${message.type} shadow-sm`}>
+        <div className={`alert alert-${message.type}`}>
           {message.text}
         </div>
       )}
 
-      {/* FORM CARD */}
+      {/* FORM */}
 
-      <div className="card bg-dark border-warning mb-4 shadow">
+      <div className="card bg-dark border-warning mb-4">
 
         <div className="card-header bg-warning text-dark fw-bold">
-          <i className="fas fa-plus-circle me-2"></i>
           Registrar Novo Treino
         </div>
 
@@ -135,41 +125,38 @@ function Treinos() {
             <div className="row g-3">
 
               <div className="col-md-2">
-                <label className="form-label text-light">Atleta ID</label>
                 <input
                   name="atleta_id"
                   value={form.atleta_id}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="ID"
+                  className="form-control bg-dark text-light border-warning"
+                  placeholder="Atleta ID"
                 />
               </div>
 
               <div className="col-md-4">
-                <label className="form-label text-light">Tipo de treino</label>
                 <input
                   name="tipo"
                   value={form.tipo}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="Ex: Musculação"
+                  className="form-control bg-dark text-light border-warning"
+                  placeholder="Tipo de treino"
                   required
                 />
               </div>
 
               <div className="col-md-2">
-                <label className="form-label text-light">Duração</label>
                 <input
                   name="duracao"
                   value={form.duracao}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="Min"
+                  className="form-control bg-dark text-light border-warning"
+                  placeholder="Duração (min)"
                 />
               </div>
 
               <div className="col-md-2">
-                <label className="form-label text-light">Intensidade</label>
+
                 <select
                   name="intensidade"
                   value={form.intensidade}
@@ -180,46 +167,41 @@ function Treinos() {
                   <option>Leve</option>
                   <option>Alta</option>
                 </select>
+
               </div>
 
               <div className="col-md-2">
-                <label className="form-label text-light">Data</label>
+
                 <input
                   type="datetime-local"
                   name="data"
                   value={form.data}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
+                  className="form-control bg-dark text-light border-warning"
                 />
+
               </div>
 
               <div className="col-12">
-                <label className="form-label text-light">Descrição</label>
+
                 <textarea
                   name="descricao"
                   value={form.descricao}
                   onChange={handleChange}
-                  className="form-control bg-transparent text-light border-warning"
-                  placeholder="Observações sobre o treino"
+                  className="form-control bg-dark text-light border-warning"
+                  placeholder="Descrição"
                 />
+
               </div>
 
               <div className="col-md-4">
 
                 <button
-                  className="btn btn-warning w-100 fw-bold"
+                  className="btn btn-warning w-100"
                   disabled={loading}
                 >
 
-                  {loading
-                    ? 'Salvando...'
-                    : (
-                      <>
-                        <i className="fas fa-save me-2"></i>
-                        Salvar Treino
-                      </>
-                    )
-                  }
+                  {loading ? "Salvando..." : "Salvar Treino"}
 
                 </button>
 
@@ -235,10 +217,9 @@ function Treinos() {
 
       {/* LISTA */}
 
-      <div className="card bg-dark border-warning shadow">
+      <div className="card bg-dark border-warning">
 
-        <div className="card-header bg-dark text-warning fw-bold">
-          <i className="fas fa-history me-2"></i>
+        <div className="card-header text-warning fw-bold">
           Últimos Treinos
         </div>
 
@@ -246,7 +227,7 @@ function Treinos() {
 
           <div className="table-responsive">
 
-            <table className="table table-dark table-hover align-middle mb-0">
+            <table className="table table-dark table-hover mb-0">
 
               <thead className="table-warning text-dark">
 
@@ -264,26 +245,28 @@ function Treinos() {
               <tbody>
 
                 {treinos.length === 0 && (
+
                   <tr>
-                    <td colSpan="6" className="text-center text-secondary py-4">
+                    <td colSpan="6" className="text-center py-4 text-secondary">
                       Nenhum treino registrado
                     </td>
                   </tr>
+
                 )}
 
                 {treinos.map((t, index) => (
 
-                  <tr key={t.id || index}>
+                  <tr key={t.id}>
 
                     <td className="text-warning fw-bold">
                       {index + 1}
                     </td>
 
-                    <td>{t.atleta_id || '-'}</td>
+                    <td>{t.atleta_id || "-"}</td>
 
                     <td>{t.tipo}</td>
 
-                    <td>{t.duracao || '-'}</td>
+                    <td>{t.duracao || "-"}</td>
 
                     <td>
                       <span className="badge bg-warning text-dark">
@@ -292,9 +275,7 @@ function Treinos() {
                     </td>
 
                     <td>
-                      {t.data
-                        ? new Date(t.data).toLocaleString()
-                        : '-'}
+                      {new Date(t.data).toLocaleString()}
                     </td>
 
                   </tr>
@@ -314,6 +295,7 @@ function Treinos() {
     </div>
 
   );
+
 }
 
 export default Treinos;

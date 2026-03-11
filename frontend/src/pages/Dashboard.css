@@ -10,7 +10,7 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* 3 por linha */
   gap: 28px;
 }
 
@@ -22,10 +22,10 @@
   text-align: center;
   transition: all 0.25s ease;
 }
+
 .dashboard-card:hover{
-transform: translateY(-5px);
-box-shadow:0 8px 20px rgba(0,0,0,0.4);
-transition:0.2s;
+  transform: translateY(-5px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.4);
 }
 
 .dashboard-icon {
