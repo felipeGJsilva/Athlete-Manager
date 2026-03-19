@@ -13,6 +13,7 @@ Sistema completo de gestão e acompanhamento de atletas desenvolvido em Flask e 
 ### ✅ Backend Flask Completo
 - Aplicação Flask com SQLAlchemy ORM
 - Banco de dados SQLite com relacionamentos
+- Login e Registro integrados via endpoints de API RESTful
 - CORS habilitado para comunicação frontend-backend
 - Tratamento robusto de erros
 - Validações de entrada de dados
@@ -36,7 +37,8 @@ Todos os modelos possuem operações CRUD completas com:
 ### ✅ Interface Web Responsiva
 - Dashboard principal com navegação intuitiva
 - Telas dedicadas para cada funcionalidade
-- Design moderno com tema escuro e paleta dourada
+- Design moderno dinâmico com alternância de tema Escuro/Claro (Night/Day Mode)
+- Gerenciamento inteligente de estado local usando `localStorage` para preferências e sessão
 - Layout totalmente responsivo para dispositivos móveis
 
 ---
