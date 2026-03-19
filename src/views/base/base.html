@@ -67,9 +67,10 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/perfil">Perfil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">Sair</a></li>
                     </ul>
+                </li>
+                <li class="nav-item d-flex align-items-center ms-2">
+                    <a class="btn btn-outline-danger btn-sm px-3" href="{{ url_for('logout') }}">Sair</a>
                 </li>
             </ul>
         </div>
