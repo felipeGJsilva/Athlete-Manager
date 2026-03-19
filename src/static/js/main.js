@@ -56,5 +56,19 @@ async function atualizarDashboard() {
 ================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
-    atualizarDashboard();
+    if (typeof atualizarDashboard === 'function') {
+        atualizarDashboard();
+    }
 });
+
+/* ===============================
+   TEMA (NIGHT/DAY MODE)
+================================ */
+function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light-mode');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+if (localStorage.getItem('theme') === 'light') {
+    document.documentElement.classList.add('light-mode');
+}

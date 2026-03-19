@@ -1118,6 +1118,71 @@ def delete_user(id):
 
 # ============== ROTAS DE AUTENTICAÇÃO ==============
 
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    try:
+        data = request.json
+        if not data or not data.get('username') or not data.get('password'):
+            return jsonify({'error': 'Username and password are required'}), 400
+        
+        user = User.query.filter_by(username=data.get('username')).first()
+        if user and user.check_password(data.get('password')) and user.is_active:
+            login_user(user)
+            return jsonify({
+                'message': 'Login successful',
+                'user': user.to_dict(),
+                'redirect_url': url_for('home')
+            }), 200
+        else:
+            return jsonify({'error': 'Credenciais inválidas ou conta desativada.'}), 401
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    try:
+        data = request.json
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        confirm_password = data.get('confirm_password')
+        role = data.get('role', 'atleta')
+        
+        if not all([username, email, password, confirm_password]):
+            return jsonify({'error': 'Por favor, preencha todos os campos.'}), 400
+            
+        if password != confirm_password:
+            return jsonify({'error': 'As senhas não coincidem.'}), 400
+            
+        if len(password) < 6:
+            return jsonify({'error': 'A senha deve ter pelo menos 6 caracteres.'}), 400
+            
+        if User.query.filter_by(username=username).first():
+            return jsonify({'error': 'Nome de usuário já existe.'}), 400
+            
+        if User.query.filter_by(email=email).first():
+            return jsonify({'error': 'Email já cadastrado.'}), 400
+            
+        if role not in ['admin', 'treinador', 'atleta']:
+            role = 'atleta'
+            
+        user = User(username=username, email=email, role=role)
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        login_user(user) # Autologin after registration
+        
+        return jsonify({
+            'message': 'Conta criada com sucesso',
+            'user': user.to_dict(),
+            'redirect_url': url_for('home')
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
